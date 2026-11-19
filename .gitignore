@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.env*
+.DS_Store
+local_references/
+*.wav
+*.aif
+*.aiff
+*.mp3
+*.m4a
+*.flac
+*.zip

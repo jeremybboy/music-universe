@@ -1,0 +1,27 @@
+<svg viewBox="0 0 850 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">One song, three arrangements</title>
+  <desc id="desc">An eight-bar motif passes through an arrangement at a musical boundary. The resulting audio plays through the speakers and drives a visualizer.</desc>
+  <rect width="850" height="240" fill="#f7f3e8"/>
+  <g fill="#192620" font-family="Arial,sans-serif">
+    <text x="32" y="41" font-size="24" font-weight="700">One song, three arrangements</text>
+    <path d="M32 59H818" stroke="#192620"/>
+    <text x="32" y="177" font-size="18" font-weight="700">Eight-bar motif</text>
+    <text x="32" y="200" font-family="Georgia,serif" font-size="14">Melody and harmony carry through</text>
+    <text x="605" y="177" font-size="18" font-weight="700">Audio and movement</text>
+    <text x="605" y="200" font-family="Georgia,serif" font-size="14">The mix drives the visualizer</text>
+  </g>
+  <g fill="#ac4c37">
+    <rect x="32" y="124" width="29" height="5"/><rect x="65" y="111" width="19" height="5"/>
+    <rect x="88" y="96" width="41" height="5"/><rect x="133" y="109" width="25" height="5"/>
+    <rect x="162" y="117" width="17" height="5"/><rect x="183" y="128" width="43" height="5"/>
+  </g>
+  <rect x="293" y="79" width="241" height="131" fill="#234b3f"/>
+  <g fill="#fffdf2" font-family="Arial,sans-serif">
+    <text x="313" y="110" font-size="18" font-weight="700">Choose a world</text>
+    <text x="313" y="137" font-size="14">Intimate / R&amp;B / Club</text>
+    <path d="M313 152H514" stroke="#8fb4a4"/>
+    <text x="313" y="180" font-family="Georgia,serif" font-size="14">Switch on a two-bar boundary</text>
+  </g>
+  <path d="M242 119H274l-6-5m6 5-6 5M550 119H582l-6-5m6 5-6 5" stroke="#192620" stroke-width="2" fill="none"/>
+  <path d="M605 123q12 0 19-8t17 3t16 1t19 2t15-14t19 9t19 6t21-2t20 1t20 1t28 0" fill="none" stroke="#ac4c37" stroke-width="3"/>
+</svg>
