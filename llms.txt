@@ -1,0 +1,7 @@
+# Music Universe
+
+> A local browser player for exploring one original song in three musical worlds.
+
+- [Quick start](README.md#quick-start)
+- [Architecture](docs/architecture.md)
+- [Contribution guidelines](CONTRIBUTING.md)
