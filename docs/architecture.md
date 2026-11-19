@@ -21,3 +21,7 @@ The master gain and compressor feed the analyser and speakers. Canvas reads the 
 ## Text intent
 
 The local parser accepts a world, a mood, an energy percentage or relative change, and named layer commands. `less percussive` mutes drums. Unsupported phrases are reported without applying a partial result. A future intent provider can implement the `IntentAdapter` type and pass its patch through the same validator.
+
+## Mac app
+
+`macos/App.swift` hosts the same player in a resizable AppKit window with WebKit. The launcher opens the bundled player page and restricts navigation to that page. `scripts/build-macos.mjs` packages the production UI as a local HTML, CSS and classic JavaScript bundle for WebKit. `macos/MakeIcon.swift` renders the MUSIC UNIVERSE icon at the sizes used by Finder and the Dock.

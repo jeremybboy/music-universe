@@ -1,6 +1,6 @@
 # Music Universe
 
-Explore one original song through three interactive musical worlds in a local browser player.
+Explore one original song through three interactive musical worlds in a local Mac app or browser player.
 
 [Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
@@ -9,6 +9,20 @@ Explore one original song through three interactive musical worlds in a local br
 Play **Afterimage**, then move among Intimate (84 BPM), R&B (95 BPM), and Club (124 BPM). The melody and harmony carry through each arrangement. You can shape the mood, energy, and instrument layers while the visualizer follows the sound.
 
 ## Quick start
+
+### Mac app
+
+Build once on macOS 14 or newer with Node.js 24 or newer and the Xcode command line tools:
+
+```sh
+npm ci
+npm run build:macos
+open "dist-macos/Music Universe.app"
+```
+
+After the build, double-click **Music Universe.app** to launch it. The app bundles the player and runs offline with no development server or Node process. The build targets the architecture of your Node install and applies an ad hoc signature for local use.
+
+### Browser
 
 With Node.js 24 or newer:
 

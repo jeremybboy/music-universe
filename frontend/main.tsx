@@ -87,7 +87,7 @@ function Player() {
   return (
     <main className="app" data-world={config.world}>
       <header className="header">
-        <a href="./" className="brand" aria-label="Music Universe home"><span><Glyph type="mark" /></span> Music Universe</a>
+        <a href="./index.html" className="brand" aria-label="Music Universe home"><span><Glyph type="mark" /></span> Music Universe</a>
         <span className="header-context">Song explorer</span>
       </header>
 
