@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173** and press **Play**. After npm installs the development dependencies, the player and dev server can run offline.
+Open **http://127.0.0.1:5191** and press **Play**. The local app uses port 5191 so it can run alongside other projects on the default Vite port. After npm installs the development dependencies, the player and dev server can run offline.
 
 Try **“switch to Club”**, **“energy 65%”**, or **“make it more intimate and less percussive”**. The text box applies a small, deterministic set of phrases to the same controls shown on screen. During playback, the new configuration takes effect at a two-bar boundary and the player shows the scheduled bar. When paused, changes take effect immediately.
 
