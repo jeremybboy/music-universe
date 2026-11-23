@@ -1,0 +1,122 @@
+{
+  "format": "music-universe",
+  "format_version": "0.1.0",
+  "identity": {
+    "id": "afterimage",
+    "title": "Afterimage",
+    "meter": [
+      4,
+      4
+    ],
+    "key": "A minor",
+    "bars": 8,
+    "harmony": [
+      "Am",
+      "F",
+      "C",
+      "G",
+      "Am",
+      "F",
+      "C",
+      "G"
+    ],
+    "sections": [
+      {
+        "id": "phrase-a",
+        "label": "First phrase",
+        "start_bar": 1,
+        "bars": 4
+      },
+      {
+        "id": "phrase-b",
+        "label": "Answer phrase",
+        "start_bar": 5,
+        "bars": 4
+      }
+    ],
+    "anchors": [
+      "Lead motif shared across all three worlds",
+      "Two passes through Am–F–C–G"
+    ]
+  },
+  "roles": [
+    "drums",
+    "bass",
+    "keys",
+    "lead",
+    "pad"
+  ],
+  "default_expression": "intimate",
+  "expressions": [
+    {
+      "id": "intimate",
+      "label": "Intimate",
+      "bpm": 84,
+      "mood": "relaxed",
+      "energy": 0.3,
+      "texture": "Felt keys · brush pulse",
+      "energy_label": "Subdued",
+      "events": "events/intimate.json"
+    },
+    {
+      "id": "rnb",
+      "label": "R&B",
+      "bpm": 95,
+      "mood": "groovy",
+      "energy": 0.58,
+      "texture": "Warm keys · syncopated bass",
+      "energy_label": "Steady groove",
+      "events": "events/rnb.json"
+    },
+    {
+      "id": "club",
+      "label": "Club",
+      "bpm": 124,
+      "mood": "energetic",
+      "energy": 0.82,
+      "texture": "Floor kick · prismatic synths",
+      "energy_label": "Driving",
+      "events": "events/club.json"
+    }
+  ],
+  "possibilities": {
+    "moods": [
+      "relaxed",
+      "intimate",
+      "groovy",
+      "energetic"
+    ],
+    "transforms": [
+      "mood-articulation",
+      "energy-shaping",
+      "layer-mix"
+    ],
+    "transition_bars": 2,
+    "transitions": [
+      {
+        "from": "intimate",
+        "to": "rnb"
+      },
+      {
+        "from": "intimate",
+        "to": "club"
+      },
+      {
+        "from": "rnb",
+        "to": "intimate"
+      },
+      {
+        "from": "rnb",
+        "to": "club"
+      },
+      {
+        "from": "club",
+        "to": "intimate"
+      },
+      {
+        "from": "club",
+        "to": "rnb"
+      }
+    ]
+  }
+}

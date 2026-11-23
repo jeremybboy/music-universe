@@ -1,0 +1,30 @@
+{
+  "format": "music-universe",
+  "format_version": "0.1.0",
+  "identity": {
+    "id": "beacon-fixture",
+    "title": "Beacon Fixture",
+    "artist": "Music Universe test fixture",
+    "key": "C major",
+    "meter": [4, 4],
+    "bars": 4,
+    "harmony": ["C", "G", "C", "G"],
+    "sections": [
+      { "id": "call", "label": "Call", "start_bar": 1, "bars": 2 },
+      { "id": "answer", "label": "Answer", "start_bar": 3, "bars": 2 }
+    ],
+    "anchors": ["Two-note signal"]
+  },
+  "roles": ["lead"],
+  "default_expression": "intimate",
+  "expressions": [
+    { "id": "intimate", "label": "Quiet Signal", "bpm": 90, "mood": "relaxed", "energy": 0.3, "events": "quiet.json" },
+    { "id": "club", "label": "Bright Signal", "bpm": 120, "mood": "energetic", "energy": 0.7, "events": "bright.json" },
+    { "id": "rnb", "label": "Locked Signal", "bpm": 100, "mood": "groovy", "energy": 0.5, "events": "quiet.json" }
+  ],
+  "possibilities": {
+    "moods": ["relaxed", "groovy", "energetic"],
+    "transforms": ["energy-shaping", "layer-mix"],
+    "transitions": [{ "from": "intimate", "to": "club" }, { "from": "club", "to": "intimate" }]
+  }
+}

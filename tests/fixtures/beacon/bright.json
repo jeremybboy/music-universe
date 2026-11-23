@@ -1,0 +1,106 @@
+[
+  [
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 0,
+      "pitch": 72,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 1.75,
+      "pitch": 72,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 3,
+      "pitch": 72,
+      "length": 0.75,
+      "velocity": 0.9
+    }
+  ],
+  [
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 0,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 1.75,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 3,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    }
+  ],
+  [
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 0,
+      "pitch": 76,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 1.75,
+      "pitch": 76,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 3,
+      "pitch": 76,
+      "length": 0.75,
+      "velocity": 0.9
+    }
+  ],
+  [
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 0,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 1.75,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    },
+    {
+      "instrument": "lead",
+      "voice": "pluck",
+      "at": 3,
+      "pitch": 79,
+      "length": 0.75,
+      "velocity": 0.9
+    }
+  ]
+]

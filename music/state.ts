@@ -1,35 +1,41 @@
-export const worlds = ['intimate', 'rnb', 'club'] as const;
-export const moods = ['relaxed', 'intimate', 'groovy', 'energetic'] as const;
-export const instruments = ['drums', 'bass', 'keys', 'lead', 'pad'] as const;
+import { canTransition, expressionFor, type Universe } from './universe/model.ts';
+import { instrumentLabels, instruments, type Instrument, type Mood, type World } from './vocabulary.ts';
 
-export type World = typeof worlds[number];
-export type Mood = typeof moods[number];
-export type Instrument = typeof instruments[number];
+export { instrumentLabels, instruments, moods, worlds } from './vocabulary.ts';
+export type { Instrument, Mood, World } from './vocabulary.ts';
+
 export type Layers = Record<Instrument, boolean>;
 export type MusicConfig = { world: World; mood: Mood; energy: number; layers: Layers };
 export type MusicConfigPatch = Partial<Omit<MusicConfig, 'layers'>> & { layers?: Partial<Layers> };
 export type IntentResult = { ok: true; patch: MusicConfigPatch } | { ok: false; message: string };
 export type IntentAdapter = (text: string, current: MusicConfig) => IntentResult | Promise<IntentResult>;
 
-export const worldInfo = {
-  intimate: { label: 'Intimate', bpm: 84, mood: 'relaxed', energy: 0.3, texture: 'Felt keys · brush pulse' },
-  rnb: { label: 'R&B', bpm: 95, mood: 'groovy', energy: 0.58, texture: 'Warm keys · syncopated bass' },
-  club: { label: 'Club', bpm: 124, mood: 'energetic', energy: 0.82, texture: 'Floor kick · prismatic synths' },
-} as const;
-export const instrumentLabels = { drums: 'Drums', bass: 'Bass', keys: 'Keys', lead: 'Lead', pad: 'Pad / FX' };
-
-export function preset(world: World): MusicConfig {
-  const { mood, energy } = worldInfo[world];
-  return { world, mood, energy, layers: { drums: true, bass: true, keys: true, lead: true, pad: true } };
+export function preset(song: Universe, world: World = song.defaultExpression): MusicConfig {
+  const { mood, energy } = expressionFor(song, world);
+  const layers: Layers = { drums: false, bass: false, keys: false, lead: false, pad: false };
+  for (const role of song.roles) layers[role] = true;
+  return { world, mood, energy, layers };
 }
 
-export function resolvePatch(current: MusicConfig, patch: MusicConfigPatch): MusicConfig {
+export function resolvePatch(song: Universe, current: MusicConfig, patch: MusicConfigPatch,
+  origin: World = current.world): MusicConfig {
   if (!patch || typeof patch !== 'object' || Array.isArray(patch) ||
     Object.keys(patch).some(key => !['world', 'mood', 'energy', 'layers'].includes(key))) {
     throw new Error('Unknown music setting.');
   }
-  if (patch.world !== undefined && !worlds.includes(patch.world)) throw new Error('Unknown world.');
-  if (patch.mood !== undefined && !moods.includes(patch.mood)) throw new Error('Unknown mood.');
+  if (patch.world !== undefined) {
+    const target = expressionFor(song, patch.world);
+    if (!canTransition(song, origin, target.id)) {
+      throw new Error('The artist did not allow a direct switch to ' + target.label + ' from this world.');
+    }
+  }
+  if (patch.mood !== undefined &&
+      (!song.possibilities.transforms.includes('mood-articulation') || !song.possibilities.moods.includes(patch.mood))) {
+    throw new Error('This mood control is unavailable for the current song.');
+  }
+  if (patch.energy !== undefined && !song.possibilities.transforms.includes('energy-shaping')) {
+    throw new Error('Energy control is unavailable for the current song.');
+  }
   if (patch.energy !== undefined && (!Number.isFinite(patch.energy) || patch.energy < 0 || patch.energy > 1)) {
     throw new Error('Energy must be between 0 and 1.');
   }
@@ -37,9 +43,12 @@ export function resolvePatch(current: MusicConfig, patch: MusicConfigPatch): Mus
     throw new Error('Expected a map of layer settings.');
   }
   for (const [name, value] of Object.entries(patch.layers ?? {})) {
-    if (!instruments.includes(name as Instrument) || typeof value !== 'boolean') throw new Error('Unknown layer setting.');
+    if (!song.possibilities.transforms.includes('layer-mix') ||
+        !song.roles.includes(name as Instrument) || typeof value !== 'boolean') {
+      throw new Error('This layer control is unavailable for the current song.');
+    }
   }
-  const base = patch.world === undefined || patch.world === current.world ? current : preset(patch.world);
+  const base = patch.world === undefined || patch.world === current.world ? current : preset(song, patch.world);
   return {
     world: base.world,
     mood: patch.mood ?? base.mood,
@@ -53,7 +62,8 @@ export function sameConfig(a: MusicConfig, b: MusicConfig) {
     instruments.every(layer => a.layers[layer] === b.layers[layer]);
 }
 
-export function parseIntent(text: string, current: MusicConfig): IntentResult {
+export function parseIntent(song: Universe, text: string, current: MusicConfig,
+  origin: World = current.world): IntentResult {
   let remaining = text.toLowerCase().trim().replace(/r\s*(?:&|and|n)\s*b\b|\brnb\b/g, 'rnb')
     .replace(/[.,!?]/g, ' ').replace(/\s+/g, ' ');
   const patch: MusicConfigPatch = {};
@@ -65,7 +75,8 @@ export function parseIntent(text: string, current: MusicConfig): IntentResult {
 
   const mood = take(/\b(?:more|mood(?: to)?|feel) (relaxed|intimate|groovy|energetic)\b/);
   if (mood) patch.mood = mood[1] as Mood;
-  if (take(/\b(intimate world|original)\b/)) patch.world = 'intimate';
+  const original = take(/\b(intimate world|original)\b/);
+  if (original) patch.world = original[1] === 'original' ? song.defaultExpression : 'intimate';
   const world = take(/\b(club|rnb)\b/);
   if (world && patch.world) return { ok: false, message: 'Choose one world per request.' };
   if (world) patch.world = world[1] as World;
@@ -83,9 +94,10 @@ export function parseIntent(text: string, current: MusicConfig): IntentResult {
     if (patch.energy > 1 || relative) return { ok: false, message: 'Choose one energy value from 0 to 100%.' };
   }
   if (relative) {
-    const base = patch.world && patch.world !== current.world ? preset(patch.world) : current;
+    const base = patch.world && patch.world !== current.world ?
+      song.expressions.find(expression => expression.id === patch.world)?.energy ?? current.energy : current.energy;
     const change = ['more', 'higher'].includes(relative[1]) ? 0.2 : -0.2;
-    patch.energy = Math.max(0, Math.min(1, Math.round((base.energy + change) * 100) / 100));
+    patch.energy = Math.max(0, Math.min(1, Math.round((base + change) * 100) / 100));
   }
 
   if (take(/\bless percussive\b/)) patch.layers = { drums: false };
@@ -105,12 +117,17 @@ export function parseIntent(text: string, current: MusicConfig): IntentResult {
   if (leftover || !Object.keys(patch).length) {
     return { ok: false, message: 'Try a world, mood, energy percentage, or layer command such as “mute drums”.' };
   }
-  return { ok: true, patch };
+  try {
+    resolvePatch(song, current, patch, origin);
+    return { ok: true, patch };
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : 'Unsupported change.' };
+  }
 }
 
-export function describePatch(patch: MusicConfigPatch): string {
+export function describePatch(song: Universe, patch: MusicConfigPatch): string {
   const changes: string[] = [];
-  if (patch.world) changes.push(worldInfo[patch.world].label);
+  if (patch.world) changes.push(expressionFor(song, patch.world).label);
   if (patch.mood) changes.push(patch.mood + ' mood');
   if (patch.energy !== undefined) changes.push(Math.round(patch.energy * 100) + '% energy');
   for (const layer of instruments) {

@@ -1,20 +1,54 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { composition, eventsForBar, secondsPerBeat } from '../music/composition.ts';
-import { instruments, parseIntent, preset, resolvePatch, worldInfo, worlds } from '../music/state.ts';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { eventsForBar as renderBar, secondsPerBeat as renderBeat } from '../music/composition.ts';
+import { expressionFor, readUniverse } from '../music/universe/model.ts';
+import { instruments, moods, parseIntent as intent, preset as makePreset, resolvePatch as patch,
+  worlds, type MusicConfig, type MusicConfigPatch, type World } from '../music/state.ts';
 import { beatAt, nextBoundaryBar } from '../music/timing.ts';
+
+const song = readUniverse(readFileSync(new URL('../songs/Afterimage.muv', import.meta.url)));
+const composition = song.identity;
+const eventsForBar = (bar: number, config: MusicConfig) => renderBar(song, bar, config);
+const secondsPerBeat = (config: MusicConfig) => renderBeat(song, config);
+const preset = (world: World) => makePreset(song, world);
+const resolvePatch = (config: MusicConfig, change: MusicConfigPatch) => patch(song, config, change);
+const parseIntent = (text: string, config: MusicConfig) => intent(song, text, config);
+
+test('packaged Afterimage matches the pre-migration renderer across all bars, worlds and controls', () => {
+  const golden = JSON.parse(readFileSync(new URL('./afterimage-golden.json', import.meta.url), 'utf8'));
+  const rounded = (_key: string, value: unknown) => typeof value === 'number' && !Number.isInteger(value) ?
+    Number(value.toFixed(10)) : value;
+  for (const world of worlds) {
+    const scenarios = [];
+    for (let bar = 0; bar < song.identity.bars; bar++) {
+      scenarios.push(eventsForBar(bar, preset(world)));
+      for (const mood of moods) for (const energy of golden.energies) {
+        scenarios.push(eventsForBar(bar, { ...preset(world), mood, energy }));
+      }
+      for (const instrument of instruments) {
+        const config = preset(world);
+        config.layers[instrument] = false;
+        scenarios.push(eventsForBar(bar, config));
+      }
+    }
+    const hash = createHash('sha256').update(JSON.stringify(scenarios, rounded)).digest('hex');
+    assert.equal(hash, golden.sha256[world], world + ' musical events');
+  }
+});
 
 test('the same authored motif and harmonic structure anchor the three worlds', () => {
   assert.deepEqual(composition.meter, [4, 4]);
   assert.equal(composition.bars, 8);
-  assert.deepEqual(composition.chords, ['Am', 'F', 'C', 'G', 'Am', 'F', 'C', 'G']);
-  assert.deepEqual(worlds.map(world => worldInfo[world].bpm), [84, 95, 124]);
+  assert.deepEqual(composition.harmony, ['Am', 'F', 'C', 'G', 'Am', 'F', 'C', 'G']);
+  assert.deepEqual(worlds.map(world => expressionFor(song, world).bpm), [84, 95, 124]);
   for (let bar = 0; bar < composition.bars; bar++) {
     for (const world of worlds) {
       const events = eventsForBar(bar, preset(world));
       assert.deepEqual(events, eventsForBar(bar + 8, preset(world)));
       assert.deepEqual(events.filter(event => event.instrument === 'lead').map(event => event.pitch),
-        composition.motif[bar].map(note => note.pitch));
+        eventsForBar(bar, preset('intimate')).filter(note => note.instrument === 'lead').map(note => note.pitch));
       assert.deepEqual(new Set(events.map(note => note.instrument)), new Set(instruments));
       assert.ok(events.every(note => note.at >= 0 && note.at < 4 &&
         Number.isInteger(note.pitch) && note.length > 0 && note.velocity > 0 && note.velocity <= 1));
