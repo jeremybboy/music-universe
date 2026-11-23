@@ -1,8 +1,8 @@
 # Music Universe
 
-Explore one original song through three interactive musical worlds in a local Mac app or browser player.
+Explore one original song through three interactive musical worlds in your browser or an offline Mac app.
 
-[Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
+**[Try Live Demo](https://jeremybboy.github.io/music-universe/)** · [Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
 ![An eight-bar motif passes through an arrangement and reaches both the speakers and the audio visualizer.](docs/assets/repository-overview.svg)
 
@@ -22,7 +22,7 @@ open "dist-macos/Music Universe.app"
 
 After the build, double-click **Music Universe.app** to launch it. The app bundles the player and runs offline with no development server or Node process. The build targets the architecture of your Node install and applies an ad hoc signature for local use.
 
-### Browser
+### Local browser development
 
 With Node.js 24 or newer:
 
@@ -48,7 +48,24 @@ Reproduce the browser smoke test with installed Google Chrome on macOS:
 MUSIC_UNIVERSE_BROWSER=chrome npm run test:browser
 ```
 
-Alternatively, run `npx playwright install chromium` once and then `npm run test:browser`. The browser test starts and closes its own loopback dev server.
+Alternatively, run `npx playwright install chromium` once and then `npm run test:browser`. The browser test starts and closes its own loopback server.
+
+## Public web deployment
+
+The [public player](https://jeremybboy.github.io/music-universe/) is a static GitHub Pages site. The Pages workflow verifies builds and browser playback on pull requests. After the owner merges, the workflow deploys the verified web build from `main` and checks the public URL and its assets. The repository uses **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+
+To exercise the production build locally under the Pages subpath:
+
+```sh
+npm run build:pages
+MUSIC_UNIVERSE_BROWSER=chrome npm run test:browser -- --pages
+```
+
+To check the deployed site after the workflow succeeds:
+
+```sh
+MUSIC_UNIVERSE_TEST_URL=https://jeremybboy.github.io/music-universe/ npm run test:browser -- --pages
+```
 
 ## Composition and assets
 

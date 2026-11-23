@@ -1,20 +1,42 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
-import { createServer } from 'vite';
+import { createServer, preview } from 'vite';
 
-const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
-await server.listen();
-const url = server.resolvedUrls.local[0];
+const pages = process.argv.includes('--pages');
+const pagesBase = '/music-universe/';
+const loopback = { host: '127.0.0.1', port: 0 };
+const testURL = process.env.MUSIC_UNIVERSE_TEST_URL;
+
+async function startLocalServer() {
+  if (pages) return preview({ base: pagesBase, preview: loopback });
+  const server = await createServer({ server: loopback });
+  await server.listen();
+  return server;
+}
+
+const server = testURL ? null : await startLocalServer();
+const url = testURL ?? server.resolvedUrls.local[0];
 const browser = await chromium.launch({
   channel: process.env.MUSIC_UNIVERSE_BROWSER || undefined,
 }).catch(async error => {
-  await server.close();
+  await server?.close();
   throw error;
 });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 940 } });
   const errors = [];
+  const responses = new Map();
   page.on('pageerror', error => errors.push(error.message));
+  if (pages) {
+    page.on('console', message => {
+      if (message.type() === 'error') errors.push(message.location().url + ' ' + message.text());
+    });
+    page.on('requestfailed', request => errors.push(request.method() + ' ' + request.url()));
+    page.on('response', response => {
+      responses.set(response.url(), response.status());
+      if (response.status() >= 400) errors.push(response.status() + ' ' + response.url());
+    });
+  }
 
   await page.addInitScript(() => {
     const probe = { rms: [], world: [], frames: [], schedulers: new Set() };
@@ -59,7 +81,23 @@ try {
   await cdp.send('Performance.enable');
   const metric = async name => (await cdp.send('Performance.getMetrics')).metrics.find(item => item.name === name).value;
 
-  await page.goto(url);
+  assert.ok((await page.goto(url))?.ok(), 'The player HTML must load.');
+  assert.equal(await page.title(), 'Music Universe | Afterimage');
+  if (pages) {
+    assert.equal(new URL(page.url()).pathname, pagesBase);
+    const assets = await page.locator('script[type="module"][src], link[rel="stylesheet"][href]')
+      .evaluateAll(nodes => nodes.map(node => node.src ?? node.href));
+    assert.ok(assets.some(asset => new URL(asset).pathname.endsWith('.js')), 'Missing production JavaScript.');
+    assert.ok(assets.some(asset => new URL(asset).pathname.endsWith('.css')), 'Missing production CSS.');
+    for (const asset of assets) {
+      const location = new URL(asset);
+      assert.equal(location.origin, new URL(url).origin);
+      assert.ok(location.pathname.startsWith(pagesBase + 'assets/'), 'Unexpected asset path: ' + asset);
+      assert.ok(responses.get(asset) >= 200 && responses.get(asset) < 400, 'Asset did not load: ' + asset);
+    }
+    const home = await page.getByRole('link', { name: 'Music Universe home' }).getAttribute('href');
+    assert.equal(new URL(home, page.url()).pathname, pagesBase + 'index.html');
+  }
   await page.keyboard.press('Tab');
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Music Universe home');
   const status = page.getByRole('status').filter({ hasText: /Playing|Scheduled|Ready/ });
@@ -67,6 +105,9 @@ try {
   await page.getByRole('button', { name: 'Play', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   await page.waitForFunction(() => window.probe.rms.some(sample => sample.rms > .04));
+  const liveFrame = await page.locator('canvas').evaluate(canvas => canvas.toDataURL());
+  await page.waitForFunction(frame => document.querySelector('canvas').toDataURL() !== frame,
+    liveFrame, { polling: 125, timeout: 3000 });
   const begin = await metric('Timestamp');
   const beginTasks = await metric('TaskDuration');
 
@@ -131,6 +172,11 @@ try {
   assert.equal(await page.evaluate(() => window.probe.schedulers.size), 1);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
   assert.equal(await page.evaluate(() => window.probe.schedulers.size), 0);
+  const mood = page.getByRole('button', { name: /^groovy$/i });
+  await mood.click();
+  assert.equal(await mood.getAttribute('aria-pressed'), 'true');
+  await page.getByRole('slider', { name: /Energy/ }).press('End');
+  assert.equal(await page.locator('.energy output').innerText(), '100%');
   assert.deepEqual(errors, []);
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
@@ -143,15 +189,18 @@ try {
   const active = audio.frames.slice(6);
   const fps = 1000 * (active.length - 1) / (active.at(-1) - active[0]);
   console.log(JSON.stringify({
+    url,
     browser: browser.version(),
     transitions: audio.transitions.map(record => record.world),
     analyserSamples: audio.rms.length,
     meanCanvasPaintsPerSecond: Number(fps.toFixed(1)),
     chromeMainThreadTaskPercent: Number((100 * (endTasks - beginTasks) / (end - begin)).toFixed(1)),
     checks: ['audio present', 'bar-3 transition', 'queue replacement', 'transition signal continuity',
-      'intent', 'all layers silent', 'reduced motion', 'pause/resume', 'keyboard focus', 'mobile width'],
+      'live canvas', 'mood', 'energy', 'intent', 'all layers silent', 'reduced motion', 'pause/resume',
+      'keyboard focus', 'mobile width', 'no uncaught exceptions',
+      ...(pages ? ['Pages asset paths', 'no console or network errors'] : [])],
   }, null, 2));
 } finally {
   await browser.close();
-  await server.close();
+  await server?.close();
 }
