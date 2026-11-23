@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
@@ -60,6 +60,8 @@ try {
   writeFileSync(join(player, 'index.html'),
     html.replace('</head>', '  <link rel="stylesheet" href="./player.css">\n  </head>')
       .replace(entry, '<script defer src="./player.js"></script>'));
+
+  copyFileSync(join(root, 'songs', 'Afterimage.muv'), join(player, 'Afterimage.muv'));
 
   mkdirSync(join(contents, 'MacOS'), { recursive: true });
   const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64';

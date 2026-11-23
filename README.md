@@ -2,11 +2,13 @@
 
 Explore one original song through three interactive musical worlds in your browser or an offline Mac app.
 
-**[Try Live Demo](https://jeremybboy.github.io/music-universe/)** · [Quick start](#quick-start) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
+**[Try Live Demo](https://jeremybboy.github.io/music-universe/)** · [Quick start](#quick-start) · [Song format](docs/muv-format.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
 ![An eight-bar motif passes through an arrangement and reaches both the speakers and the audio visualizer.](docs/assets/repository-overview.svg)
 
 Play **Afterimage**, then move among Intimate (84 BPM), R&B (95 BPM), and Club (124 BPM). The melody and harmony carry through each arrangement. You can shape the mood, energy, and instrument layers while the visualizer follows the sound.
+
+Use **Discover** to see the song’s identity, authored worlds and allowed transitions, and what’s playing now. Playback continues when you switch between Listen and Discover. Use **Open .muv** to explore a local package or [download the bundled Afterimage package](songs/Afterimage.muv) from the repository.
 
 ## Quick start
 
@@ -39,6 +41,7 @@ Try **“switch to Club”**, **“energy 65%”**, or **“make it more intimat
 
 ```sh
 npm test
+npm run pack:muv -- --check
 npm run build
 ```
 
@@ -69,4 +72,4 @@ MUSIC_UNIVERSE_TEST_URL=https://jeremybboy.github.io/music-universe/ npm run tes
 
 ## Composition and assets
 
-Afterimage is an authored eight-bar loop in A minor. The melody, harmony, and rhythmic patterns live in [composition.ts](music/composition.ts). The browser synthesizes each part from those events, and the artwork is drawn in CSS and Canvas. Review [the architecture](docs/architecture.md) for the state model and timing behavior.
+Afterimage is an authored eight-bar loop in A minor. The melody, harmony, and rhythmic patterns live in the [canonical song data](songs/afterimage). The browser synthesizes each part from those events, and the artwork is drawn in CSS and Canvas. Review [the architecture](docs/architecture.md) for the state model and timing behavior.

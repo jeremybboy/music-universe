@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer, preview } from 'vite';
+import { beaconPackage } from './fixtures.mjs';
 
 const pages = process.argv.includes('--pages');
 const pagesBase = '/music-universe/';
@@ -39,7 +40,7 @@ try {
   }
 
   await page.addInitScript(() => {
-    const probe = { rms: [], world: [], frames: [], schedulers: new Set() };
+    const probe = { rms: [], world: [], frames: [], pitches: [], schedulers: new Set() };
     window.probe = probe;
     const timer = window.setInterval;
     const cancel = window.clearInterval;
@@ -68,6 +69,17 @@ try {
         world = current;
       }, 24);
       return analyser;
+    };
+
+    const createOscillator = AudioContext.prototype.createOscillator;
+    AudioContext.prototype.createOscillator = function () {
+      const oscillator = createOscillator.call(this);
+      const start = oscillator.start;
+      oscillator.start = function (...args) {
+        probe.pitches.push(this.frequency.value);
+        return start.apply(this, args);
+      };
+      return oscillator;
     };
 
     const clear = CanvasRenderingContext2D.prototype.clearRect;
@@ -112,8 +124,21 @@ try {
   const beginTasks = await metric('TaskDuration');
 
   await page.getByRole('button', { name: /R&B/ }).click();
-  await page.getByRole('button', { name: /124 BPM.*Club/ }).click();
+  await page.getByRole('button', { name: 'Discover', exact: true }).press('Enter');
+  const map = page.locator('#discover');
+  assert.equal(await map.getByRole('heading', { name: 'Musical identity' }).count(), 1);
+  assert.equal(await map.getByRole('heading', { name: 'Afterimage' }).count(), 1);
+  assert.equal(await page.evaluate(() =>
+    document.querySelector('.timeline').getAttribute('aria-valuetext').match(/Bar (\d+) of/)[1] ===
+      document.querySelector('[data-testid="discover-bar"]').textContent.trim().split(' ')[0]), true);
+  await map.getByRole('button', { name: /Club.*124 BPM.*Available/ }).click();
   assert.match(await status.innerText(), /Scheduled for bar 3/);
+  if (process.env.MUSIC_UNIVERSE_DISCOVER_SCREENSHOT) {
+    await page.screenshot({ path: process.env.MUSIC_UNIVERSE_DISCOVER_SCREENSHOT, animations: 'disabled' });
+  }
+  await page.getByRole('button', { name: 'Listen', exact: true }).click();
+  assert.match(await status.innerText(), /Scheduled for bar 3/);
+  assert.equal(await page.evaluate(() => window.probe.schedulers.size), 1);
   assert.equal(await player.getAttribute('data-world'), 'intimate');
   await page.waitForFunction(() => document.querySelector('main').dataset.world === 'club', null, { timeout: 8000 });
   assert.match(await page.getByRole('progressbar').getAttribute('aria-valuetext'), /Bar 3 of 8/);
@@ -177,6 +202,39 @@ try {
   assert.equal(await mood.getAttribute('aria-pressed'), 'true');
   await page.getByRole('slider', { name: /Energy/ }).press('End');
   assert.equal(await page.locator('.energy output').innerText(), '100%');
+  const selectFile = async (name, buffer) => {
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.getByRole('button', { name: 'Open .muv', exact: true }).click(),
+    ]);
+    await chooser.setFiles({ name, buffer, mimeType: 'application/zip' });
+  };
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await selectFile('invalid.muv', Buffer.from('not a ZIP'));
+  assert.match(await page.getByRole('alert').innerText(), /Couldn’t open song.*complete/);
+  assert.equal(await page.getByRole('heading', { name: 'Afterimage' }).count(), 1);
+  assert.equal(await page.evaluate(() => window.probe.schedulers.size), 1);
+
+  await selectFile('Beacon.muv', beaconPackage());
+  await page.getByRole('heading', { name: 'Beacon Fixture', exact: true }).waitFor();
+  assert.equal(await page.getByRole('alert').count(), 0);
+  assert.equal(await page.getByRole('progressbar').getAttribute('aria-valuetext'), 'Bar 1 of 4');
+  assert.equal(await page.evaluate(() => window.probe.schedulers.size), 0);
+  await page.getByRole('button', { name: 'Discover', exact: true }).click();
+  assert.equal(await map.getByRole('button', { name: /Locked Signal.*Unavailable/ }).isDisabled(), true);
+  assert.match(await map.getByText('Two-note signal').innerText(), /Two-note signal/);
+  await page.evaluate(() => { window.probe.pitches.length = 0; });
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await page.waitForFunction(() => window.probe.pitches.some(value => Math.abs(value - 261.625565) < .01));
+  await map.getByRole('button', { name: /Bright Signal.*120 BPM.*Available/ }).click();
+  assert.match(await status.innerText(), /Scheduled for bar 3/);
+  await page.waitForFunction(() => document.querySelector('main').dataset.world === 'club', null, { timeout: 8500 });
+  await page.waitForFunction(() => window.probe.pitches.some(value => Math.abs(value - 659.255114) < .01));
+  assert.match(await page.getByTestId('discover-bar').innerText(), /3 \/ 4/);
+  await page.getByRole('button', { name: 'Listen', exact: true }).click();
+  await page.getByRole('button', { name: 'Afterimage', exact: true }).click();
+  await page.getByRole('heading', { name: 'Afterimage', exact: true }).waitFor();
+  assert.equal(await page.getByRole('progressbar').getAttribute('aria-valuetext'), 'Bar 1 of 8');
   assert.deepEqual(errors, []);
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
@@ -197,7 +255,8 @@ try {
     chromeMainThreadTaskPercent: Number((100 * (endTasks - beginTasks) / (end - begin)).toFixed(1)),
     checks: ['audio present', 'bar-3 transition', 'queue replacement', 'transition signal continuity',
       'live canvas', 'mood', 'energy', 'intent', 'all layers silent', 'reduced motion', 'pause/resume',
-      'keyboard focus', 'mobile width', 'no uncaught exceptions',
+      'Discover round-trip and transition', 'invalid import preserves playback', 'external package plays its own notes',
+      'artist permissions', 'keyboard focus', 'mobile width', 'no uncaught exceptions',
       ...(pages ? ['Pages asset paths', 'no console or network errors'] : [])],
   }, null, 2));
 } finally {

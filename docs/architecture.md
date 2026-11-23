@@ -1,8 +1,12 @@
 # Player architecture
 
-`frontend/` owns the controls and reads playback snapshots. `music/state.ts` validates patches from both the controls and the offline intent parser. `music/composition.ts` resolves the next bar of Afterimage against the chosen world, mood, energy, and enabled layers. `music/transport.ts` is the authority on when that bar sounds.
+`frontend/` owns the controls and reads playback snapshots. `music/state.ts` validates patches from both the controls and the offline intent parser. `music/composition.ts` renders the next authored bar of the active song against the chosen world, mood, energy, and enabled layers. `music/transport.ts` is the authority on when that bar sounds.
 
-## Composition
+## Portable song data
+
+The [provisional .muv format](muv-format.md) stores the work identity, expressions, permitted changes, and JSON note events. `music/universe/` validates the archive and its data before the transport can replace the active song. Listen and Discover display the same song and transport snapshot. Both view controls and text prompts use the same permission checks and scheduler.
+
+## Afterimage
 
 Afterimage uses eight bars in 4/4, in A minor, over Am–F–C–G twice. Each world keeps the lead pitches and their order. Intimate plays staggered, soft keys and a sparse pulse. R&B revoices the groove around a syncopated bass and backbeat. Club uses a floor kick, repeated bass notes, and brighter electronic voices. Mood modifies note articulation and filter brightness, while energy adjusts voicing and attack detail. The five layers contribute independently to the mix. Changing world loads its default mood and energy and preserves layer toggles.
 

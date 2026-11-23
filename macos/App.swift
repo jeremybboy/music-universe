@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 import WebKit
 
 @main
@@ -61,6 +62,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
               url.isFileURL,
               url.standardizedFileURL.path == playerURL?.standardizedFileURL.path else { return .cancel }
         return .allow
+    }
+
+    func webView(
+        _ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters,
+        initiatedByFrame frame: WKFrameInfo
+    ) async -> [URL]? {
+        guard frame.isMainFrame,
+              let url = webView.url, url.isFileURL,
+              url.standardizedFileURL.path == playerURL?.standardizedFileURL.path,
+              let window = webView.window else { return nil }
+
+        let panel = NSOpenPanel()
+        panel.title = "Open a Music Universe song"
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        if let type = UTType(filenameExtension: "muv", conformingTo: .data) {
+            panel.allowedContentTypes = [type]
+        }
+
+        let response = await panel.beginSheetModal(for: window)
+        guard response == .OK, let choice = panel.url,
+              choice.pathExtension.lowercased() == "muv" else { return nil }
+        return [choice]
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {

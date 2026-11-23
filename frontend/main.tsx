@@ -1,13 +1,18 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { composition } from '../music/composition.ts';
+import { beatsPerBar } from '../music/timing.ts';
+import { canTransition, expressionFor, readUniverse } from '../music/universe/model.ts';
+import { maxPackageBytes } from '../music/universe/zip.ts';
+import afterimageArchive from '../songs/Afterimage.muv?url&inline';
+import { Discover } from './Discover.tsx';
 import { Transport } from '../music/transport.ts';
-import { describePatch, instrumentLabels, instruments, moods, parseIntent, resolvePatch, worldInfo, worlds,
-  type MusicConfigPatch } from '../music/state.ts';
+import { describePatch, instrumentLabels, parseIntent, type MusicConfigPatch } from '../music/state.ts';
 import { mountField } from '../visualization/field.ts';
 import './style.css';
 
-const transport = new Transport();
+const starterBytes = Uint8Array.from(atob(afterimageArchive.split(',')[1]), character => character.charCodeAt(0));
+const starterSong = readUniverse(starterBytes);
+const transport = new Transport(starterSong);
 
 function Glyph({ type }: { type: 'mark' | 'play' | 'pause' | 'arrow' | 'sound' | 'mute' | 'loop' }) {
   const symbols: Record<typeof type, ReactNode> = {
@@ -25,6 +30,11 @@ function Glyph({ type }: { type: 'mark' | 'play' | 'pause' | 'arrow' | 'sound' |
 
 function Player() {
   const [state, setState] = useState(() => transport.snapshot());
+  const [song, setSong] = useState(starterSong);
+  const [view, setView] = useState<'listen' | 'discover'>('listen');
+  const [loadingSong, setLoadingSong] = useState(false);
+  const [fileError, setFileError] = useState('');
+  const fileInput = useRef<HTMLInputElement>(null);
   const [intentText, setIntentText] = useState('');
   const [feedback, setFeedback] = useState<{ text: string; error: boolean } | null>(null);
   const [volume, setVolume] = useState(80);
@@ -34,8 +44,37 @@ function Player() {
   const drawing = useRef<ReturnType<typeof mountField> | null>(null);
   const { config, beat, playing, pending } = state;
   const target = pending?.config ?? config;
-  const currentBar = Math.floor(beat / 4) % composition.bars + 1;
-  const progress = (beat % (composition.bars * 4)) / (composition.bars * 4);
+  const { identity, expressions, roles, possibilities } = song;
+  const active = expressionFor(song, config.world);
+  const currentBar = Math.floor(beat / beatsPerBar) % identity.bars + 1;
+  const totalBeats = identity.bars * beatsPerBar;
+  const progress = (beat % totalBeats) / totalBeats;
+
+  function selectSong(next: typeof song) {
+    transport.replaceSong(next);
+    setSong(next);
+    document.title = 'Music Universe | ' + next.identity.title;
+    setState(transport.snapshot());
+    setFeedback(null);
+    setIntentText('');
+    setFileError('');
+  }
+
+  async function openSong(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+    setLoadingSong(true);
+    setFileError('');
+    try {
+      if (file.size > maxPackageBytes) throw new Error('Package exceeds the 512 KiB limit.');
+      selectSong(readUniverse(new Uint8Array(await file.arrayBuffer())));
+    } catch (error) {
+      setFileError(error instanceof Error ? error.message : 'The song could not be opened.');
+    } finally {
+      setLoadingSong(false);
+    }
+  }
 
   useEffect(() => {
     drawing.current = mountField(field.current!, transport);
@@ -53,8 +92,14 @@ function Player() {
   }, [playing]);
 
   function change(patch: MusicConfigPatch) {
-    transport.change(resolvePatch(transport.desired, patch));
-    setState(transport.snapshot());
+    try {
+      transport.change(patch);
+      setState(transport.snapshot());
+      return true;
+    } catch (error) {
+      setFeedback({ text: error instanceof Error ? error.message : 'This change is unavailable.', error: true });
+      return false;
+    }
   }
 
   async function toggle() {
@@ -66,11 +111,12 @@ function Player() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const result = parseIntent(intentText, transport.desired);
+    const result = parseIntent(song, intentText, transport.desired, transport.snapshot().transitionFrom);
     if (result.ok) {
-      change(result.patch);
-      setFeedback({ text: describePatch(result.patch), error: false });
-      setIntentText('');
+      if (change(result.patch)) {
+        setFeedback({ text: describePatch(song, result.patch), error: false });
+        setIntentText('');
+      }
     } else {
       setFeedback({ text: result.message, error: true });
     }
@@ -82,16 +128,26 @@ function Player() {
     transport.setVolume(level / 100);
   }
 
-  const pendingBar = pending ? pending.bar % composition.bars + 1 : null;
+  const pendingBar = pending ? pending.bar % identity.bars + 1 : null;
 
   return (
-    <main className="app" data-world={config.world}>
+    <main className="app" data-world={config.world} data-view={view}>
       <header className="header">
         <a href="./index.html" className="brand" aria-label="Music Universe home"><span><Glyph type="mark" /></span> Music Universe</a>
-        <span className="header-context">Song explorer</span>
+        <nav className="player-nav" aria-label="Player view">
+          <button type="button" aria-pressed={view === 'listen'} onClick={() => setView('listen')}>Listen</button>
+          <button type="button" aria-pressed={view === 'discover'} onClick={() => setView('discover')}>Discover</button>
+        </nav>
+        <div className="song-files">
+          {song !== starterSong && <button type="button" disabled={loadingSong || opening}
+            onClick={() => selectSong(starterSong)}>Afterimage</button>}
+          <button type="button" disabled={loadingSong || opening} onClick={() => fileInput.current?.click()}>Open .muv</button>
+          <input ref={fileInput} type="file" accept=".muv" hidden onChange={openSong} />
+        </div>
       </header>
+      {fileError && <p className="file-error" role="alert">Couldn’t open song. {fileError}</p>}
 
-      <div className="content">
+      <div className="content" hidden={view !== 'listen'}>
         <section className="song" aria-labelledby="song-title">
           <div className="cover" role="img" aria-label="Abstract artwork with overlapping violet and amber light trails">
             <div className="cover-disc"></div>
@@ -99,25 +155,26 @@ function Player() {
             <div className="cover-light"></div>
             <div className="cover-orbit"></div>
           </div>
-          <h1 id="song-title">{composition.title}</h1>
-          <p>One song, three ways to hear it.</p>
-          <div className="song-meta"><Glyph type="loop" /> {composition.bars} bars <span>·</span> {composition.key}</div>
+          <h1 id="song-title">{identity.title}</h1>
+          <p>{song === starterSong ? 'One song, three ways to hear it.' : 'Artist-authored song package.'}</p>
+          <div className="song-meta"><Glyph type="loop" /> {identity.bars} {identity.bars === 1 ? 'bar' : 'bars'}{identity.key && <><span>·</span> {identity.key}</>}</div>
         </section>
 
         <section className="explore" aria-labelledby="world-title">
           <h2 id="world-title">Explore this song’s worlds</h2>
           <div className="worlds" role="group" aria-label="Musical world">
-            {worlds.map(world => (
+            {expressions.map(({ id: world, label, bpm, texture }) => (
               <button type="button" key={world} className={'world world-' + world} data-active={config.world === world}
                 data-queued={pending !== null && target.world === world && config.world !== world}
-                aria-pressed={target.world === world} onClick={() => { setFeedback(null); change({ world }); }}>
+                aria-pressed={target.world === world}
+                disabled={!canTransition(song, state.transitionFrom, world)} onClick={() => { setFeedback(null); change({ world }); }}>
                 <span className="material" aria-hidden="true"></span>
-                <span className="world-top"><span>{worldInfo[world].bpm} BPM</span>
+                <span className="world-top"><span>{bpm} BPM</span>
                   {config.world === world && <Glyph type="mark" />}
                   {pending && target.world === world && config.world !== world && <span className="world-queued">Queued</span>}
                 </span>
-                <span className="world-name">{worldInfo[world].label}</span>
-                <span className="texture">{worldInfo[world].texture}</span>
+                <span className="world-name">{label}</span>
+                <span className="texture">{texture}</span>
               </button>
             ))}
           </div>
@@ -127,12 +184,14 @@ function Player() {
             <div className="intent-entry">
               <span className="spark" aria-hidden="true">✧</span>
               <input id="intent" value={intentText} onChange={event => setIntentText(event.target.value)}
-                placeholder="Make it more intimate and less percussive" maxLength={160}
+                placeholder={song === starterSong ? 'Make it more intimate and less percussive' : 'Ask for an available change'}
+                maxLength={160}
                 aria-describedby="intent-feedback" autoComplete="off" />
               <button type="submit" aria-label="Apply text request" disabled={!intentText.trim()}><Glyph type="arrow" /></button>
             </div>
             <p id="intent-feedback" className={feedback?.error ? 'intent-error' : ''} aria-live="polite">
-              {feedback?.text ?? 'Try “switch to Club”, “energy 65%”, or “mute drums”.'}
+              {feedback?.text ?? (song === starterSong ?
+                'Try “switch to Club”, “energy 65%”, or “mute drums”.' : 'Available controls are shown below.')}
             </p>
           </form>
 
@@ -140,8 +199,9 @@ function Player() {
             <div>
               <h3>Mood</h3>
               <div className="moods" role="group" aria-label="Mood">
-                {moods.map(mood => (
+                {possibilities.moods.map(mood => (
                   <button type="button" key={mood} aria-pressed={target.mood === mood}
+                    disabled={!possibilities.transforms.includes('mood-articulation')}
                     onClick={() => { setFeedback(null); change({ mood }); }}>{mood}</button>
                 ))}
               </div>
@@ -149,13 +209,15 @@ function Player() {
             <div className="energy">
               <label htmlFor="energy">Energy <output htmlFor="energy">{Math.round(target.energy * 100)}%</output></label>
               <input type="range" id="energy" min="0" max="100" value={Math.round(target.energy * 100)}
+                disabled={!possibilities.transforms.includes('energy-shaping')}
                 onChange={event => { setFeedback(null); change({ energy: Number(event.target.value) / 100 }); }} />
             </div>
           </div>
           <h3 className="instrument-title">Instrumentation</h3>
           <div className="layers" role="group" aria-label="Instrumentation">
-            {instruments.map(layer => (
-              <button type="button" key={layer} aria-pressed={target.layers[layer]} onClick={() => {
+            {roles.map(layer => (
+              <button type="button" key={layer} aria-pressed={target.layers[layer]}
+                disabled={!possibilities.transforms.includes('layer-mix')} onClick={() => {
                 setFeedback(null);
                 change({ layers: { [layer]: !transport.desired.layers[layer] } });
               }}><span aria-hidden="true"></span>{instrumentLabels[layer]}</button>
@@ -164,6 +226,9 @@ function Player() {
         </section>
       </div>
 
+      {view === 'discover' && <Discover song={song} state={state} currentBar={currentBar}
+        selectWorld={world => { setFeedback(null); change({ world }); }} />}
+
       <section className="stage" aria-label="Audio visualizer">
         <div className="stage-wash"></div>
         <canvas ref={field} aria-hidden="true" />
@@ -171,25 +236,27 @@ function Player() {
       </section>
 
       <footer className="transport">
-        <div className="timeline" role="progressbar" aria-label="Position in the eight bar loop" aria-valuemin={0}
-          aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-valuetext={'Bar ' + currentBar + ' of 8'}>
-          {Array.from({ length: 8 }, (_, index) => <span key={index} style={{
-            '--bar-fill': Math.min(100, Math.max(0, (progress * 8 - index) * 100)) + '%',
+        <div className="timeline" role="progressbar" aria-label="Position in the song loop" aria-valuemin={0}
+          style={{ gridTemplateColumns: 'repeat(' + identity.bars + ', minmax(0, 1fr))' }}
+          aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}
+          aria-valuetext={'Bar ' + currentBar + ' of ' + identity.bars}>
+          {Array.from({ length: identity.bars }, (_, index) => <span key={index} style={{
+            '--bar-fill': Math.min(100, Math.max(0, (progress * identity.bars - index) * 100)) + '%',
           } as React.CSSProperties}></span>)}
         </div>
         <div className="transport-row">
           <div className="now">
-            <div className="now-main"><span className="now-dot"></span>{worldInfo[config.world].label}<span> · </span>{worldInfo[config.world].bpm} BPM</div>
+            <div className="now-main"><span className="now-dot"></span>{active.label}<span> · </span>{active.bpm} BPM</div>
             <div className="status" role="status">
               {state.error ?? (pending ? 'Scheduled for bar ' + pendingBar : playing ?
                 (state.applied ? 'Applied · Playing' : 'Playing') : opening ? 'Preparing audio…' : 'Ready to play')}
             </div>
           </div>
-          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening} onClick={toggle}>
+          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening || loadingSong} onClick={toggle}>
             <Glyph type={playing ? 'pause' : 'play'} />
           </button>
           <div className="right-transport">
-            <span className="bar-counter">Bar {currentBar} / 8</span>
+            <span className="bar-counter">Bar {currentBar} / {identity.bars}</span>
             <button type="button" className="icon-button" aria-label={volume > 0 ? 'Mute output' : 'Unmute output'}
               onClick={() => setLevel(volume > 0 ? 0 : volumeBeforeMute.current)}>
               <Glyph type={volume > 0 ? 'sound' : 'mute'} />

@@ -1,12 +1,15 @@
 import { Synth } from './audio.ts';
 import { eventsForBar, secondsPerBeat } from './composition.ts';
-import { preset, sameConfig, type MusicConfig } from './state.ts';
+import { preset, resolvePatch, sameConfig, type MusicConfig, type MusicConfigPatch } from './state.ts';
+import type { Universe } from './universe/model.ts';
+import type { World } from './vocabulary.ts';
 import { beatAt, beatsPerBar, nextBoundaryBar, type ClockAnchor } from './timing.ts';
 
 type Transition = { config: MusicConfig; bar: number; time: number };
 export type Playback = {
   playing: boolean;
   config: MusicConfig;
+  transitionFrom: World;
   beat: number;
   pending: Transition | null;
   applied: number;
@@ -25,9 +28,10 @@ export class Transport {
   private bus: GainNode | null = null;
   private interval: ReturnType<typeof setInterval> | null = null;
   private opening: Promise<void> | null = null;
-  private clock: ClockAnchor = { time: 0, beat: 0, secondsPerBeat: 60 / 84 };
-  private active = preset('intimate');
-  private scheduled = this.active;
+  private song: Universe;
+  private clock: ClockAnchor;
+  private active: MusicConfig;
+  private scheduled: MusicConfig;
   private queued: Transition | null = null;
   private armed: Transition | null = null;
   private nextBar = 0;
@@ -36,6 +40,24 @@ export class Transport {
   private applied = 0;
   private volume = .8;
   private error: string | null = null;
+
+  constructor(song: Universe) {
+    this.song = song;
+    this.active = preset(song);
+    this.scheduled = this.active;
+    this.clock = { time: 0, beat: 0, secondsPerBeat: secondsPerBeat(song, this.active) };
+  }
+
+  replaceSong(song: Universe) {
+    const config = preset(song);
+    this.pause();
+    this.song = song;
+    this.active = config;
+    this.scheduled = config;
+    this.position = 0;
+    this.applied = 0;
+    this.error = null;
+  }
 
   get desired(): MusicConfig {
     this.activate();
@@ -51,13 +73,16 @@ export class Transport {
     const playing = this.interval !== null;
     return {
       config: this.active, playing, applied: this.applied, error: this.error,
+      transitionFrom: this.armed?.config.world ?? this.active.world,
       beat: playing ? beatAt(this.clock, this.audioTime) : this.position,
       pending: this.queued ?? this.armed,
     };
   }
 
-  change(config: MusicConfig) {
+  change(patch: MusicConfigPatch) {
     const current = this.snapshot();
+    const desired = this.queued?.config ?? this.armed?.config ?? this.active;
+    const config = resolvePatch(this.song, desired, patch, current.transitionFrom);
     if (!current.playing) {
       this.active = config;
       this.applied++;
@@ -68,7 +93,7 @@ export class Transport {
       return;
     }
     const bar = nextBoundaryBar(current.beat, this.nextBar);
-    const time = this.nextTime + (bar - this.nextBar) * beatsPerBar * secondsPerBeat(this.scheduled);
+    const time = this.nextTime + (bar - this.nextBar) * beatsPerBar * secondsPerBeat(this.song, this.scheduled);
     this.queued = { config, bar, time };
   }
 
@@ -95,7 +120,7 @@ export class Transport {
       if (context.state !== 'running') throw new Error('Audio context is not running.');
       const downbeat = context.currentTime + .055;
       const bar = Math.floor(this.position / beatsPerBar);
-      const seconds = secondsPerBeat(this.active);
+      const seconds = secondsPerBeat(this.song, this.active);
       this.clock = { time: downbeat, beat: this.position, secondsPerBeat: seconds };
       this.scheduled = this.active;
       this.nextBar = bar;
@@ -171,7 +196,7 @@ export class Transport {
       this.active = this.armed.config;
       this.clock = {
         time: this.armed.time, beat: this.armed.bar * beatsPerBar,
-        secondsPerBeat: secondsPerBeat(this.active),
+        secondsPerBeat: secondsPerBeat(this.song, this.active),
       };
       this.armed = null;
       this.applied++;
@@ -192,8 +217,8 @@ export class Transport {
         this.scheduled = this.armed.config;
         this.activate();
       }
-      const seconds = secondsPerBeat(this.scheduled);
-      for (const note of eventsForBar(bar, this.scheduled)) {
+      const seconds = secondsPerBeat(this.song, this.scheduled);
+      for (const note of eventsForBar(this.song, bar, this.scheduled)) {
         const time = this.nextTime + note.at * seconds;
         if (time >= now + .002) this.synth!.schedule(note, this.scheduled, time, seconds, this.bus!);
       }
