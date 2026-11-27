@@ -69,7 +69,7 @@ try {
   mkdirSync(join(contents, 'MacOS'), { recursive: true });
   const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64';
   run('/usr/bin/xcrun', ['swiftc', '-O', '-parse-as-library', '-target', arch + '-apple-macos' + minimumMacOS,
-    '-module-cache-path', join(stage, 'swift-cache'), '-o', executable, join(native, 'App.swift'), join(native, 'TrackAnalysis.swift')]);
+    '-module-cache-path', join(stage, 'swift-cache'), '-o', executable, join(native, 'App.swift'), join(native, 'TrackAnalysis.swift'), join(native, 'TrackPlayback.swift')]);
   run('/usr/bin/xcrun', ['swiftc', '-O', '-module-cache-path', join(stage, 'swift-cache'),
     '-o', join(stage, 'make-icon'), join(native, 'MakeIcon.swift')]);
   run(join(stage, 'make-icon'), [iconset]);

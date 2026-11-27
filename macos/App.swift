@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
         configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "trackAnalysis")
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "openStrudel")
         let player = WKWebView(frame: .zero, configuration: configuration)
         player.navigationDelegate = self
         player.uiDelegate = self
@@ -65,9 +66,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
                                didReceive message: WKScriptMessage) async -> (Any?, String?) {
         guard message.frameInfo.isMainFrame, let window,
               let current = message.frameInfo.request.url, current.isFileURL,
-              current.standardizedFileURL.path == playerURL?.standardizedFileURL.path,
-              let request = message.body as? [String: Any], let action = request["action"] as? String else {
-            return (nil, "Local analysis is unavailable for this page.")
+              current.standardizedFileURL.path == playerURL?.standardizedFileURL.path else {
+            return (nil, "Native controls are unavailable for this page.")
+        }
+        if message.name == "openStrudel" {
+            guard let source = message.body as? String,
+                  !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  source.utf8.count <= 48_000 else { return (nil, "Choose a pattern to open in Strudel.") }
+            let encoded = Data(source.utf8).base64EncodedString()
+            var link = URLComponents()
+            link.scheme = "https"
+            link.host = "strudel.cc"
+            link.path = "/"
+            link.percentEncodedFragment = encoded.addingPercentEncoding(withAllowedCharacters:
+                CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
+            guard let url = link.url else { return (nil, "The Strudel link could not be encoded.") }
+            trackAnalysis.pausePlayback()
+            return (NSWorkspace.shared.open(url), nil)
+        }
+        guard let request = message.body as? [String: Any], let action = request["action"] as? String else {
+            return (nil, "Local analysis is unavailable for this request.")
         }
         do {
             return (try await trackAnalysis.handle(action, message: request, window: window), nil)

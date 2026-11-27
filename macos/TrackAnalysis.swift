@@ -1,19 +1,15 @@
 import AppKit
-import AVFoundation
 import WebKit
 
 @MainActor
 final class TrackAnalysis {
     private let fileManager = FileManager.default
     private let defaultsKey = "AudioAnalystWorkspace"
-    private let sources = ["mix", "drums", "bass", "other", "vocals"]
+    private let playback = TrackPlayback()
     private var process: Process?
     private var output: URL?
     private var source: URL?
-    private var audio: AVAudioPlayer?
-    private var channel = "mix"
     private var cancelled = false
-    private var volume: Float = 0.8
 
     func handle(_ action: String, message: [String: Any], window: NSWindow) async throws -> Any {
         switch action {
@@ -39,23 +35,35 @@ final class TrackAnalysis {
             }
             return status()
         case "play":
-            guard let requested = message["channel"] as? String, sources.contains(requested) else {
-                throw fail("Choose the original or an available stem.")
-            }
-            try play(requested, seconds: message["seconds"] as? Double)
+            publishAudio()
+            try playback.play()
+            return status()
+        case "auditionOriginal":
+            publishAudio()
+            playback.selectOriginal()
+            try playback.play(from: message["seconds"] as? Double)
+            return status()
+        case "selectOriginal":
+            playback.selectOriginal()
+            return status()
+        case "selectStems":
+            playback.selectStems()
+            return status()
+        case "toggleStem":
+            publishAudio()
+            if let name = message["stem"] as? String { playback.toggleStem(name) }
             return status()
         case "pause":
             pausePlayback()
             return status()
         case "seek":
-            if let audio, let seconds = message["seconds"] as? Double, seconds.isFinite {
-                audio.currentTime = min(audio.duration, max(0, seconds))
+            if let seconds = message["seconds"] as? Double, seconds.isFinite {
+                try playback.seek(to: seconds)
             }
             return status()
         case "volume":
             if let level = message["level"] as? Double, level.isFinite {
-                volume = Float(min(1, max(0, level)))
-                audio?.volume = volume
+                playback.setVolume(Float(min(1, max(0, level))))
             }
             return status()
         case "report":
@@ -69,11 +77,10 @@ final class TrackAnalysis {
         }
     }
 
-    func pausePlayback() { audio?.pause() }
+    func pausePlayback() { playback.pause() }
 
     func cleanUp() {
-        audio?.stop()
-        audio = nil
+        playback.reset()
         if let process, process.isRunning {
             let directory = output
             process.terminationHandler = { _ in
@@ -129,16 +136,21 @@ final class TrackAnalysis {
         self.output = output
         self.process = process
         source = choice
-        channel = "mix"
         cancelled = false
         return status()
     }
 
+    private func publishAudio() {
+        if let output { playback.publish(from: output) }
+    }
+
     private func status() -> [String: Any] {
+        publishAudio()
         var data: [String: Any] = [
-            "connected": workspace != nil, "running": process?.isRunning == true, "available": [],
-            "percent": 0, "stage": "Preparing audio", "channel": channel, "playing": audio?.isPlaying ?? false,
-            "position": audio?.currentTime ?? 0, "duration": audio?.duration ?? 0,
+            "connected": workspace != nil, "running": process?.isRunning == true, "available": playback.available,
+            "percent": 0, "stage": "Preparing audio", "usesOriginal": playback.usesOriginal,
+            "selected": TrackPlayback.stemNames.filter { playback.selected.contains($0) },
+            "playing": playback.isPlaying, "position": playback.position, "duration": playback.duration,
         ]
         guard let output, let source, let process else { return data }
         data["id"] = output.lastPathComponent
@@ -147,7 +159,6 @@ final class TrackAnalysis {
            let step = try? JSONSerialization.jsonObject(with: buffer) as? [String: Any] {
             for key in ["percent", "stage", "error"] { data[key] = step[key] }
         }
-        data["available"] = sources.filter { fileManager.fileExists(atPath: output.appendingPathComponent($0 + ".wav").path) }
         if cancelled {
             data["stage"] = process.isRunning ? "Cancelling" : "Cancelled"
         } else if !process.isRunning {
@@ -158,25 +169,6 @@ final class TrackAnalysis {
             }
         }
         return data
-    }
-
-    private func play(_ requested: String, seconds: Double?) throws {
-        guard let output else { throw fail("Choose an audio track first.") }
-        let chosen = output.appendingPathComponent(requested + ".wav")
-        guard fileManager.fileExists(atPath: chosen.path) else { throw fail("That audio is still being prepared.") }
-        let position = seconds.flatMap { $0.isFinite ? max(0, $0) : nil } ?? audio?.currentTime ?? 0
-        if let audio, requested == channel {
-            audio.currentTime = position >= audio.duration - 0.01 ? 0 : position
-            guard audio.play() else { throw fail("The audio output could not start.") }
-            return
-        }
-        let next = try AVAudioPlayer(contentsOf: chosen)
-        next.volume = volume
-        next.currentTime = position >= next.duration - 0.01 ? 0 : position
-        audio?.stop()
-        audio = next
-        channel = requested
-        guard next.play() else { throw fail("The audio output could not start.") }
     }
 
     private func fail(_ message: String) -> NSError {

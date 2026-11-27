@@ -1,7 +1,8 @@
-export type Channel = 'mix' | 'drums' | 'bass' | 'other' | 'vocals';
+export type Stem = 'drums' | 'bass' | 'other' | 'vocals';
+export type Channel = 'mix' | Stem;
 export type TrackStatus = {
   connected: boolean; source?: string; id?: string; running: boolean; percent: number; stage: string;
-  available: Channel[]; channel: Channel; playing: boolean; position: number; duration: number;
+  available: Channel[]; usesOriginal: boolean; selected: Stem[]; playing: boolean; position: number; duration: number;
   reportReady?: boolean; error?: string;
 };
 

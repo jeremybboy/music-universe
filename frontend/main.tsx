@@ -9,6 +9,7 @@ import { SongAnalysis } from './SongAnalysis.tsx';
 import { StrudelPlayer } from './StrudelPlayer.tsx';
 import { analysisAction, hasLocalAnalyst, stopTrackAudio } from './track-analysis.ts';
 import { compilePattern } from '../music/pattern.ts';
+import { strudelURL } from '../music/strudel.ts';
 import { PatternPlayer } from '../music/pattern-player.ts';
 import starterPattern from '../music/renditions/afterimage-intimate.strudel?raw';
 import { AnalysisSession } from '../music/analysis-report.ts';
@@ -155,11 +156,24 @@ function Player() {
     }
   }
 
-  function pauseForExternal(href: string) {
-    if (opening || loadingSong || strudelHandoff) return;
+  async function pauseForExternal(source: string) {
+    if (opening || loadingSong || strudelHandoff || !source.trim()) return;
     claimAudio();
+    setPatternError('');
     setStrudelHandoff(true);
-    window.open(href, '_blank', 'noopener,noreferrer');
+    if (window.location.protocol !== 'file:') {
+      window.open(strudelURL(source), '_blank', 'noopener,noreferrer');
+      return;
+    }
+    try {
+      const native = (window as Window & { webkit?: { messageHandlers?: {
+        openStrudel?: { postMessage: (source: string) => Promise<boolean> };
+      } } }).webkit?.messageHandlers?.openStrudel;
+      if (!await native?.postMessage(source)) throw new Error('The Strudel browser window could not open.');
+    } catch (error) {
+      setStrudelHandoff(false);
+      setPatternError(String(error));
+    }
   }
 
   async function toggle() {

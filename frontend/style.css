@@ -459,7 +459,7 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; }
 .track-progress progress { width: 100%; accent-color: #c996fa; }
 .track-progress button { justify-self: start; }
 .track-stage { font-size: 0.85rem; color: #d8c9e7; }
-.track-channels [aria-pressed="true"] { border-color: #c996fa; background: #503373; }
+.track-channels [aria-pressed="true"], .track-modes [aria-pressed="true"] { border-color: #c996fa; background: #503373; }
 .track-seek { display: grid; gap: 0.65rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
 .track-seek input { width: 100%; accent-color: #c996fa; }
 .track-file { position: relative; display: inline-flex; overflow: hidden; }

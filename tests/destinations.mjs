@@ -4,7 +4,12 @@ import { beaconPackage } from './fixtures.mjs';
 
 const report = readFileSync(new URL('./fixtures/synthetic-analysis-v1.json', import.meta.url));
 const data = JSON.parse(report);
-const pattern = readFileSync(new URL('../music/renditions/afterimage-intimate.strudel', import.meta.url), 'utf8');
+const fullPattern = `// @title Café cue
+setcpm(122/4);
+const phrase = note("c4 e4 g4 ~").s("sine");
+const song = arrange([2, phrase], [1, s("bd*4")]);
+const phase = getIsStarted() ? getTime() : 0;
+song.early(Math.floor(phase) * 0)`;
 const comparison = { label: 'Latin house', prompt: 'A Latin house track.', mean_cosine: .25, peak_start_s: 24, peak_end_s: 32 };
 const minimal = Buffer.from(JSON.stringify({
   schema_version: 1, source: 'Minimal synthetic excerpt', excerpt: { start_s: 4, duration_s: 2, sample_rate_hz: 48000 },
@@ -109,7 +114,7 @@ export async function testDestinations(browser, url) {
     });
     await code.fill('window.alert("This must never execute")');
     await page.getByRole('button', { name: 'Restart pattern', exact: true }).click();
-    await page.getByRole('alert').filter({ hasText: /Each track starts/ }).waitFor();
+    await page.getByRole('alert').filter({ hasText: /Offline tracks start/ }).waitFor();
     await nav('Listen').click();
     await page.waitForFunction(() => {
       const analyser = window.patternAudition.at(-1);
@@ -139,17 +144,20 @@ export async function testDestinations(browser, url) {
     await context.setOffline(false);
     await launch.waitFor();
     await page.getByRole('button', { name: 'Load Afterimage pattern', exact: true }).click();
-    await page.getByRole('alert').filter({ hasText: /Each track starts/ }).waitFor({ state: 'hidden' });
+    await page.getByRole('alert').filter({ hasText: /Offline tracks start/ }).waitFor({ state: 'hidden' });
     assert.equal(externalRequests, 0);
     if (process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT) {
       await page.screenshot({ path: process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT, fullPage: true });
     }
+    await code.fill(fullPattern);
+    await run.click();
+    await page.getByRole('alert').filter({ hasText: /Choose Open in Strudel/ }).waitFor();
     await play.click();
     const [tab] = await Promise.all([context.waitForEvent('page'), launch.click()]);
     await tab.waitForLoadState();
     const opened = new URL(tab.url());
     assert.equal(opened.origin, 'https://strudel.cc');
-    assert.equal(Buffer.from(decodeURIComponent(opened.hash.slice(1)), 'base64').toString('utf8'), pattern);
+    assert.equal(Buffer.from(decodeURIComponent(opened.hash.slice(1)), 'base64').toString('utf8'), fullPattern);
     assert.equal(externalRequests, 1);
     assert.ok(await play.isDisabled());
     await nav('Listen').click();

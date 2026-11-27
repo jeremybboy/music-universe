@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { readAnalysisReport, type AnalysisReport } from '../music/analysis-report.ts';
 import { AnalysisEvidence } from './AnalysisEvidence.tsx';
-import { analysisAction, hasLocalAnalyst, stopTrackAudio, type Channel, type TrackStatus } from './track-analysis.ts';
+import { analysisAction, hasLocalAnalyst, stopTrackAudio, type TrackStatus } from './track-analysis.ts';
 
-const channels = [
-  ['mix', 'Original'], ['drums', 'Drums'], ['bass', 'Bass'], ['other', 'Accompaniment'], ['vocals', 'Vocals'],
+const stems = [
+  ['drums', 'Drums'], ['bass', 'Bass'], ['other', 'Accompaniment'], ['vocals', 'Vocals'],
 ] as const;
 
 function clock(time: number) {
@@ -93,14 +93,14 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
     }
   }
 
-  function audition(channel: Channel) {
+  function togglePlayback() {
     if (busyRef.current) return;
-    if (status?.playing && status.channel === channel) void act('pause');
-    else if (claimAudio()) void act('play', { channel });
+    if (status?.playing) void act('pause');
+    else if (claimAudio()) void act('play');
   }
 
   const report = evidence?.id === status?.id ? evidence?.report : undefined;
-  const unavailable = Boolean(status?.reportReady && status.available.length < channels.length);
+  const unavailable = Boolean(status?.reportReady && status.available.length < stems.length + 1);
 
   return <section className="track-workspace" aria-labelledby="track-heading">
     <div className="destination-heading"><div><h2 id="track-heading">Analyze a recording</h2>
@@ -118,13 +118,19 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
         {status.running && <button type="button" className="destination-action" disabled={busy}
           onClick={() => void act('cancel')}>Cancel analysis</button>}
       </div>
-      <div className="track-channels" aria-label="Audition the original and estimated stems">
-        {channels.map(([channel, label]) => {
-          const playing = status.channel === channel && status.playing;
-          return <button key={channel} type="button" className="destination-action" aria-label={(playing ? 'Pause ' : 'Play ') + label}
-            aria-pressed={playing} disabled={busy || !status.available.includes(channel)}
-            onClick={() => audition(channel)}>{playing ? 'Ⅱ' : '▶'} {label}</button>;
-        })}
+      <div className="track-actions track-modes" role="group" aria-label="Recording playback">
+        <button type="button" className="destination-action"
+          disabled={busy || !status.available.includes('mix') || (!status.usesOriginal && !status.selected.length)}
+          onClick={togglePlayback}>{status.playing ? 'Pause recording' : 'Play recording'}</button>
+        <button type="button" className="destination-action" aria-pressed={status.usesOriginal}
+          disabled={busy || !status.available.includes('mix')} onClick={() => void act('selectOriginal')}>Original</button>
+        <button type="button" className="destination-action" aria-pressed={!status.usesOriginal}
+          disabled={busy || !status.selected.length} onClick={() => void act('selectStems')}>Stem mix</button>
+      </div>
+      <div className="track-channels" role="group" aria-label="Stem groups to play together">
+        {stems.map(([stem, label]) => <button key={stem} type="button" className="destination-action"
+          aria-pressed={status.selected.includes(stem)} disabled={busy || !status.available.includes(stem)}
+          onClick={() => void act('toggleStem', { stem })}>{label}</button>)}
       </div>
       {status.duration > 0 && <div className="track-seek">
         <span>{clock(status.position)}</span>
@@ -136,7 +142,7 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
     {unavailable && <p>Some stems are unavailable. Check that the local Demucs checkpoint is installed and separation succeeded.</p>}
     {(error || status?.error) && <p role="alert" className="analysis-alert">{error || status?.error}</p>}
     {report && <AnalysisEvidence report={report} auditionAt={seconds => {
-      if (!busyRef.current && claimAudio()) void act('play', { channel: 'mix', seconds });
+      if (!busyRef.current && claimAudio()) void act('auditionOriginal', { seconds });
     }} />}
   </section>;
 }

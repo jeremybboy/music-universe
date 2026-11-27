@@ -53,7 +53,12 @@ export function compilePattern(source: string): Pattern {
   if (!tracks.length || tracks.length > 8) throw new Error('Write between one and eight pattern tracks.');
   const parsed = tracks.map(track => {
     const line = /^(note|s|sound)\(\s*"([^"\r\n]+)"\s*\)/.exec(track);
-    if (!line) throw new Error('Each track starts with note("…") or s("…").');
+    if (!line) {
+      if (/^(?:const|let|var|function|if)\b/.test(track)) {
+        throw new Error('JavaScript declarations and control flow need the full Strudel runtime. Choose Open in Strudel.');
+      }
+      throw new Error('Offline tracks start with note("…") or s("…"). Choose Open in Strudel to run a full Strudel program.');
+    }
     const pitched = line[1] === 'note';
     const voice: Voice = { wave: 'triangle', gain: .22, attack: .012, release: .13, lpf: 12_000 };
     const limits = { gain: [0, 1], attack: [0, .5], release: [0, 1.5], lpf: [40, 16_000] };
