@@ -262,7 +262,7 @@ try {
       'live canvas', 'mood', 'energy', 'intent', 'all layers silent', 'reduced motion', 'pause/resume',
       'Discover round-trip and transition', 'invalid import preserves playback', 'external package plays its own notes',
       'artist permissions', 'offline analysis import and exact export', 'report scope isolation',
-      'external Strudel handoff and unavailable state', 'keyboard focus', 'mobile width', 'no uncaught exceptions',
+      'offline editable pattern audio and stop on navigation', 'external Strudel handoff and unavailable state', 'keyboard focus', 'mobile width', 'no uncaught exceptions',
       ...(pages ? ['Pages asset paths', 'no console or network errors'] : [])],
   }, null, 2));
 } finally {

@@ -24,6 +24,20 @@ export async function testDestinations(browser, url) {
     await chooser.setFiles({ name, buffer, mimeType });
   }
   const importReport = (name, buffer) => choose('Import analysis report', name, buffer);
+  await page.addInitScript(() => {
+    window.patternAudition = [];
+    const connect = AudioNode.prototype.connect;
+    AudioNode.prototype.connect = function (destination, ...args) {
+      if (this instanceof DynamicsCompressorNode && destination instanceof AudioDestinationNode) {
+        const observer = this.context.createAnalyser();
+        connect.call(this, observer);
+        connect.call(observer, destination);
+        window.patternAudition.push(observer);
+        return destination;
+      }
+      return connect.call(this, destination, ...args);
+    };
+  });
   try {
     await page.goto(url);
     await play.click();
@@ -71,6 +85,32 @@ export async function testDestinations(browser, url) {
     await page.getByRole('heading', { name: 'Minimal synthetic excerpt', exact: true }).waitFor();
     await nav('Strudel Player').click();
     await page.getByRole('heading', { name: /No rendition.*Club/ }).waitFor();
+    const code = page.getByRole('textbox', { name: 'Pattern code' });
+    const run = page.getByRole('button', { name: 'Run pattern', exact: true });
+    await code.fill('setcps(120/60/4)\n$: note("a4 c5 e5 a5").s("sine")');
+    await play.click();
+    await pause.waitFor();
+    await run.click();
+    await play.waitFor();
+    await page.waitForFunction(() => {
+      const analyser = window.patternAudition.at(-1);
+      if (!analyser) return false;
+      const wave = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(wave);
+      return wave.some(sample => Math.abs(sample) > .01);
+    });
+    await code.fill('window.alert("This must never execute")');
+    await page.getByRole('button', { name: 'Restart pattern', exact: true }).click();
+    await page.getByRole('alert').filter({ hasText: /Each track starts/ }).waitFor();
+    await nav('Listen').click();
+    await page.waitForFunction(() => {
+      const analyser = window.patternAudition.at(-1);
+      const wave = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(wave);
+      return wave.every(sample => Math.abs(sample) < .001);
+    });
+    await nav('Strudel Player').click();
+    await run.waitFor();
 
     await choose('Open .muv', 'Beacon.muv', beaconPackage(), 'application/zip');
     await page.getByRole('heading', { name: /No rendition.*Beacon/ }).waitFor();
@@ -90,6 +130,7 @@ export async function testDestinations(browser, url) {
     });
     await context.setOffline(false);
     await launch.waitFor();
+    await page.getByRole('button', { name: 'Load Afterimage pattern', exact: true }).click();
     assert.equal(externalRequests, 0);
     if (process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT) {
       await page.screenshot({ path: process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT, fullPage: true });

@@ -1,5 +1,15 @@
 # Song Analysis
 
+## Analyze and audition a recording on Mac
+
+In the standalone app, choose **Song Analysis → Connect Audio Analyst** and select the trusted local Audio Analyst handoff workspace. It must contain `work/audio-analyst/runtime/bin/python`, the installed dependencies and checkpoints in `work/audio-analyst`, and the analyzer modules in `outputs/audio-analyst`. Install FFmpeg so it is available in `/opt/homebrew/bin`, `/usr/local/bin`, or `/usr/bin`. The app remembers the selected workspace on this Mac.
+
+Choose a supported audio file of up to 512 MiB or 15 minutes. Progress shows the current operation and the share of analysis stages crossed, including optional stages the installation skips. Demucs separates the whole track when its checkpoint is installed. Tempo, key, notes, timbre, and comparison evidence cover up to the first 24 seconds, and CLAP2 covers up to the first eight. Original and stem buttons share a position so you can switch between them. Stems are model estimates. The recording and generated files stay on this computer, in a temporary working directory for the session. One job can run at a time and can be cancelled.
+
+The web app can preview a browser-decodable recording from a local file and import an existing report. The public static build has no analysis service.
+
+## Import a completed report
+
 Use **Song Analysis → Import analysis report** to open an Audio Analyst schema v1 JSON file up to 2 MiB. Review the excerpt and confirm the song or expression explicitly. The app keeps one report per association for the loaded song instance, in session memory. An invalid import keeps the previous report and playback. Reloading the app clears the session.
 
 Reports retain the original JSON, including method and model metadata, every prompt and cosine score, and the embedding when supplied. **Download report JSON** returns the retained report in browsers. The offline Mac app supports local import and inspection. Keep the original JSON file for reuse on macOS. The browser and Mac app do not need a running analyzer to import a report.

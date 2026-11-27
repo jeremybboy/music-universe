@@ -442,3 +442,41 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; }
   .player-nav { flex-wrap: wrap; gap: 3px; }
 }
 @media (max-width: 620px) { .evidence-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.track-workspace, .pattern-workbench {
+  display: grid;
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+  padding: clamp(0.9rem, 2vw, 1.4rem);
+  border: 1px solid #ffffff23;
+  border-radius: 0.75rem;
+  background: #ffffff06;
+}
+.track-workspace h2 { margin: 0; }
+.track-workspace .destination-heading { margin: 0; }
+.track-actions, .track-channels, .pattern-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.track-progress, .track-media { display: grid; gap: 0.55rem; }
+.track-progress progress { width: 100%; accent-color: #c996fa; }
+.track-progress button { justify-self: start; }
+.track-stage { font-size: 0.85rem; color: #d8c9e7; }
+.track-channels [aria-pressed="true"] { border-color: #c996fa; background: #503373; }
+.track-seek { display: grid; gap: 0.65rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
+.track-seek input { width: 100%; accent-color: #c996fa; }
+.track-file { position: relative; display: inline-flex; overflow: hidden; }
+.track-file:focus-within { outline: 2px solid #e4bcff; outline-offset: 3px; }
+.track-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.track-media audio { width: 100%; }
+.pattern-workbench textarea {
+  display: block;
+  width: 100%;
+  min-height: 15rem;
+  padding: 0.85rem;
+  border: 1px solid #ffffff32;
+  border-radius: 0.45rem;
+  color: #f3e8ff;
+  background: #0f0c17;
+  font: 0.86rem/1.6 ui-monospace, monospace;
+  resize: vertical;
+  tab-size: 2;
+}
+.pattern-workbench textarea:focus { outline: 2px solid #c996fa; outline-offset: 1px; }

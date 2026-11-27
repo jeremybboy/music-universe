@@ -4,11 +4,12 @@ import { maxReportBytes, readAnalysisReport, type AnalysisReport, type AnalysisS
 import { expressionFor, type Universe } from '../music/universe/model.ts';
 import type { World } from '../music/vocabulary.ts';
 import { AnalysisEvidence } from './AnalysisEvidence.tsx';
+import { TrackWorkspace } from './TrackWorkspace.tsx';
 
-type Props = { song: Universe; world: World; session: AnalysisSession };
+type Props = { song: Universe; world: World; session: AnalysisSession; claimAudio: () => boolean };
 type Draft = { song: Universe; world: World; report: AnalysisReport };
 
-export function SongAnalysis({ song, world, session }: Props) {
+export function SongAnalysis({ song, world, session, claimAudio }: Props) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [scope, setScope] = useState<AnalysisScope>('song');
@@ -71,6 +72,7 @@ export function SongAnalysis({ song, world, session }: Props) {
           onClick={() => fileInput.current?.click()}>{reading ? 'Reading report…' : 'Import analysis report'}</button>
         <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={read} />
       </header>
+      <TrackWorkspace claimAudio={claimAudio} />
       {error && <p role="alert" className="analysis-alert">{error}</p>}
       {notice && <p aria-live="polite" className="analysis-notice">{notice}</p>}
       {candidate && <section className="analysis-confirm" aria-labelledby="attach-heading">

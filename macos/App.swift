@@ -17,9 +17,10 @@ struct MusicUniverse {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
     private var window: NSWindow?
     private var playerURL: URL?
+    private let trackAnalysis = TrackAnalysis()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMenu()
@@ -33,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "trackAnalysis")
         let player = WKWebView(frame: .zero, configuration: configuration)
         player.navigationDelegate = self
         player.uiDelegate = self
@@ -53,6 +55,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         window.makeKeyAndOrderFront(nil)
         self.window = window
         NSApp.activate()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        trackAnalysis.cleanUp()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController,
+                               didReceive message: WKScriptMessage) async -> (Any?, String?) {
+        guard message.frameInfo.isMainFrame, let window,
+              let current = message.frameInfo.request.url, current.isFileURL,
+              current.standardizedFileURL.path == playerURL?.standardizedFileURL.path,
+              let request = message.body as? [String: Any], let action = request["action"] as? String else {
+            return (nil, "Local analysis is unavailable for this page.")
+        }
+        do {
+            return (try await trackAnalysis.handle(action, message: request, window: window), nil)
+        } catch {
+            return (nil, error.localizedDescription)
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
@@ -87,11 +108,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         return [choice]
     }
 
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        trackAnalysis.pausePlayback()
+    }
+
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
         showFailure("The bundled player could not open. Rebuild Music Universe from its project folder.")
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        trackAnalysis.pausePlayback()
         guard let playerURL else { return }
         webView.loadFileURL(playerURL, allowingReadAccessTo: playerURL.deletingLastPathComponent())
     }

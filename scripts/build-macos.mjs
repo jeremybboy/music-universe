@@ -62,11 +62,12 @@ try {
       .replace(entry, '<script defer src="./player.js"></script>'));
 
   copyFileSync(join(root, 'songs', 'Afterimage.muv'), join(player, 'Afterimage.muv'));
+  copyFileSync(join(native, 'analyze-track.py'), join(resources, 'analyze-track.py'));
 
   mkdirSync(join(contents, 'MacOS'), { recursive: true });
   const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64';
   run('/usr/bin/xcrun', ['swiftc', '-O', '-parse-as-library', '-target', arch + '-apple-macos' + minimumMacOS,
-    '-module-cache-path', join(stage, 'swift-cache'), '-o', executable, join(native, 'App.swift')]);
+    '-module-cache-path', join(stage, 'swift-cache'), '-o', executable, join(native, 'App.swift'), join(native, 'TrackAnalysis.swift')]);
   run('/usr/bin/xcrun', ['swiftc', '-O', '-module-cache-path', join(stage, 'swift-cache'),
     '-o', join(stage, 'make-icon'), join(native, 'MakeIcon.swift')]);
   run(join(stage, 'make-icon'), [iconset]);
