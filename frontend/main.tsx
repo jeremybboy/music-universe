@@ -5,6 +5,14 @@ import { canTransition, expressionFor, readUniverse } from '../music/universe/mo
 import { maxPackageBytes } from '../music/universe/zip.ts';
 import afterimageArchive from '../songs/Afterimage.muv?url&inline';
 import { Discover } from './Discover.tsx';
+import { SongAnalysis } from './SongAnalysis.tsx';
+import { StrudelPlayer } from './StrudelPlayer.tsx';
+import { analysisAction, hasLocalAnalyst, stopTrackAudio } from './track-analysis.ts';
+import { compilePattern } from '../music/pattern.ts';
+import { strudelURL } from '../music/strudel.ts';
+import { PatternPlayer } from '../music/pattern-player.ts';
+import starterPattern from '../music/renditions/afterimage-intimate.strudel?raw';
+import { AnalysisSession } from '../music/analysis-report.ts';
 import { Transport } from '../music/transport.ts';
 import { describePatch, instrumentLabels, parseIntent, type MusicConfigPatch } from '../music/state.ts';
 import { mountField } from '../visualization/field.ts';
@@ -13,6 +21,7 @@ import './style.css';
 const starterBytes = Uint8Array.from(atob(afterimageArchive.split(',')[1]), character => character.charCodeAt(0));
 const starterSong = readUniverse(starterBytes);
 const transport = new Transport(starterSong);
+const patternPlayer = new PatternPlayer();
 
 function Glyph({ type }: { type: 'mark' | 'play' | 'pause' | 'arrow' | 'sound' | 'mute' | 'loop' }) {
   const symbols: Record<typeof type, ReactNode> = {
@@ -28,10 +37,20 @@ function Glyph({ type }: { type: 'mark' | 'play' | 'pause' | 'arrow' | 'sound' |
     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{symbols[type]}</svg>;
 }
 
+const views = [
+  ['listen', 'Listen'], ['discover', 'Discover'], ['analysis', 'Song Analysis'], ['strudel', 'Strudel Player'],
+] as const;
+type View = typeof views[number][0];
+
 function Player() {
   const [state, setState] = useState(() => transport.snapshot());
   const [song, setSong] = useState(starterSong);
-  const [view, setView] = useState<'listen' | 'discover'>('listen');
+  const [view, setView] = useState<View>('listen');
+  const [analysisSession] = useState(() => new AnalysisSession());
+  const [strudelHandoff, setStrudelHandoff] = useState(false);
+  const [patternSource, setPatternSource] = useState(starterPattern);
+  const [patternRunning, setPatternRunning] = useState(false);
+  const [patternError, setPatternError] = useState('');
   const [loadingSong, setLoadingSong] = useState(false);
   const [fileError, setFileError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
@@ -102,8 +121,67 @@ function Player() {
     }
   }
 
+  function stopPattern() {
+    patternPlayer.stop();
+    setPatternRunning(false);
+  }
+
+  function claimAudio() {
+    if (opening || strudelHandoff) return false;
+    stopPattern();
+    transport.pause();
+    setState(transport.snapshot());
+    return true;
+  }
+
+  function selectView(next: View) {
+    if (next !== 'strudel') stopPattern();
+    if (next !== 'analysis') void stopTrackAudio();
+    setView(next);
+  }
+
+  function editPattern(source: string) {
+    setPatternSource(source);
+    setPatternError('');
+  }
+
+  async function playPattern() {
+    if (opening || loadingSong || strudelHandoff) return;
+    setPatternError('');
+    try {
+      const pattern = compilePattern(patternSource);
+      if (claimAudio() && await patternPlayer.play(pattern, song)) setPatternRunning(true);
+    } catch (error) {
+      setPatternError(error instanceof Error ? error.message : 'The pattern could not start.');
+    }
+  }
+
+  async function pauseForExternal(source: string) {
+    if (opening || loadingSong || strudelHandoff || !source.trim()) return;
+    claimAudio();
+    setPatternError('');
+    setStrudelHandoff(true);
+    if (window.location.protocol !== 'file:') {
+      window.open(strudelURL(source), '_blank', 'noopener,noreferrer');
+      return;
+    }
+    try {
+      const native = (window as Window & { webkit?: { messageHandlers?: {
+        openStrudel?: { postMessage: (source: string) => Promise<boolean> };
+      } } }).webkit?.messageHandlers?.openStrudel;
+      if (!await native?.postMessage(source)) throw new Error('The Strudel browser window could not open.');
+    } catch (error) {
+      setStrudelHandoff(false);
+      setPatternError(String(error));
+    }
+  }
+
   async function toggle() {
+    if (strudelHandoff) return;
     setOpening(true);
+    stopPattern();
+    document.querySelector<HTMLAudioElement>('audio[aria-label="Original recording"]')?.pause();
+    if (hasLocalAnalyst && view === 'analysis') await stopTrackAudio();
     await transport.toggle();
     setState(transport.snapshot());
     setOpening(false);
@@ -126,6 +204,8 @@ function Player() {
     if (level > 0) volumeBeforeMute.current = level;
     setVolume(level);
     transport.setVolume(level / 100);
+    patternPlayer.setVolume(level / 100);
+    if (hasLocalAnalyst) void analysisAction('volume', { level: level / 100 }).catch(() => {});
   }
 
   const pendingBar = pending ? pending.bar % identity.bars + 1 : null;
@@ -135,8 +215,8 @@ function Player() {
       <header className="header">
         <a href="./index.html" className="brand" aria-label="Music Universe home"><span><Glyph type="mark" /></span> Music Universe</a>
         <nav className="player-nav" aria-label="Player view">
-          <button type="button" aria-pressed={view === 'listen'} onClick={() => setView('listen')}>Listen</button>
-          <button type="button" aria-pressed={view === 'discover'} onClick={() => setView('discover')}>Discover</button>
+          {views.map(([id, label]) =>
+            <button key={id} type="button" aria-pressed={view === id} onClick={() => selectView(id)}>{label}</button>)}
         </nav>
         <div className="song-files">
           {song !== starterSong && <button type="button" disabled={loadingSong || opening}
@@ -229,6 +309,12 @@ function Player() {
       {view === 'discover' && <Discover song={song} state={state} currentBar={currentBar}
         selectWorld={world => { setFeedback(null); change({ world }); }} />}
 
+      {view === 'analysis' && <SongAnalysis song={song} world={active.id} session={analysisSession} claimAudio={claimAudio} />}
+      {view === 'strudel' && <StrudelPlayer songTitle={identity.title} expression={active.label} world={active.id}
+        bundledAfterimage={song === starterSong} disabled={opening || loadingSong} handoff={strudelHandoff}
+        pauseForExternal={pauseForExternal} source={patternSource} setSource={editPattern}
+        running={patternRunning} error={patternError} playPattern={playPattern} stopPattern={stopPattern} />}
+
       <section className="stage" aria-label="Audio visualizer">
         <div className="stage-wash"></div>
         <canvas ref={field} aria-hidden="true" />
@@ -236,6 +322,10 @@ function Player() {
       </section>
 
       <footer className="transport">
+        {strudelHandoff && <div className="strudel-handoff">
+          <p>Stop playback in the Strudel tab before resuming Music Universe.</p>
+          <button type="button" className="destination-action" onClick={() => setStrudelHandoff(false)}>I stopped Strudel</button>
+        </div>}
         <div className="timeline" role="progressbar" aria-label="Position in the song loop" aria-valuemin={0}
           style={{ gridTemplateColumns: 'repeat(' + identity.bars + ', minmax(0, 1fr))' }}
           aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}
@@ -252,7 +342,7 @@ function Player() {
                 (state.applied ? 'Applied · Playing' : 'Playing') : opening ? 'Preparing audio…' : 'Ready to play')}
             </div>
           </div>
-          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening || loadingSong} onClick={toggle}>
+          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening || loadingSong || strudelHandoff} onClick={toggle}>
             <Glyph type={playing ? 'pause' : 'play'} />
           </button>
           <div className="right-transport">

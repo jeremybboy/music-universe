@@ -1,0 +1,12 @@
+// Afterimage / Intimate - a Music Universe Strudel rendition.
+// Retains the eight-bar lead and harmony. Timing is placed on a sixteenth-note grid.
+setcps(84/60/4)
+
+$: note("<[a4 ~ ~ c5 ~ ~ e5 ~ ~ ~ ~ ~ d5 ~ ~ ~] [~ c5 ~ ~ ~ ~ a4 ~ ~ f4 ~ ~ ~ ~ ~ ~] [g4 ~ ~ c5 ~ ~ e5 ~ ~ ~ ~ ~ ~ g5 ~ ~] [~ d5 ~ ~ ~ ~ b4 ~ ~ ~ g4 ~ ~ ~ ~ ~] [a4 ~ ~ c5 ~ ~ e5 ~ ~ ~ ~ ~ a5 ~ ~ ~] [~ f5 ~ ~ ~ ~ e5 ~ ~ c5 ~ ~ ~ ~ ~ ~] [g4 ~ ~ c5 ~ ~ e5 ~ ~ ~ ~ ~ ~ d5 ~ ~] [~ b4 ~ ~ ~ ~ d5 ~ ~ ~ a4 ~ ~ ~ ~ ~]>")
+  .s("triangle").attack(0.009).release(0.23).gain(0.22).lpf(2200)
+
+$: note("<[[a3,c4,e4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [a3,c4,e4] ~ ~ ~ ~ ~] [[a3,c4,e4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [a3,c4,e4] ~ ~ ~ ~ ~] [[g3,b3,c4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [g3,b3,c4] ~ ~ ~ ~ ~] [[g3,b3,d4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [g3,b3,d4] ~ ~ ~ ~ ~] [[a3,c4,e4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [a3,c4,e4] ~ ~ ~ ~ ~] [[a3,c4,e4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [a3,c4,e4] ~ ~ ~ ~ ~] [[g3,b3,c4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [g3,b3,c4] ~ ~ ~ ~ ~] [[g3,b3,d4] ~ ~ ~ ~ ~ ~ ~ ~ ~ [g3,b3,d4] ~ ~ ~ ~ ~]>")
+  .s("sine").attack(0.025).release(0.36).gain(0.105)
+
+$: note("<[a2 ~ ~ ~ ~ ~ ~ ~ ~ ~ a2 ~ ~ ~ ~ ~] [f2 ~ ~ ~ ~ ~ ~ ~ ~ ~ f2 ~ ~ ~ ~ ~] [c2 ~ ~ ~ ~ ~ ~ ~ ~ ~ c2 ~ ~ ~ ~ ~] [g2 ~ ~ ~ ~ ~ ~ ~ ~ ~ g2 ~ ~ ~ ~ ~] [a2 ~ ~ ~ ~ ~ ~ ~ ~ ~ a2 ~ ~ ~ ~ ~] [f2 ~ ~ ~ ~ ~ ~ ~ ~ ~ f2 ~ ~ ~ ~ ~] [c2 ~ ~ ~ ~ ~ ~ ~ ~ ~ c2 ~ ~ ~ ~ ~] [g2 ~ ~ ~ ~ ~ ~ ~ ~ ~ g2 ~ ~ ~ ~ ~]>")
+  .s("sine").attack(0.012).release(0.18).gain(0.20)

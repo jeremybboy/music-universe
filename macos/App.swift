@@ -17,9 +17,10 @@ struct MusicUniverse {
 }
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandlerWithReply {
     private var window: NSWindow?
     private var playerURL: URL?
+    private let trackAnalysis = TrackAnalysis()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installMenu()
@@ -33,6 +34,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "trackAnalysis")
+        configuration.userContentController.addScriptMessageHandler(self, contentWorld: .page, name: "openStrudel")
         let player = WKWebView(frame: .zero, configuration: configuration)
         player.navigationDelegate = self
         player.uiDelegate = self
@@ -55,6 +58,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
         NSApp.activate()
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        trackAnalysis.cleanUp()
+    }
+
+    func userContentController(_ userContentController: WKUserContentController,
+                               didReceive message: WKScriptMessage) async -> (Any?, String?) {
+        guard message.frameInfo.isMainFrame, let window,
+              let current = message.frameInfo.request.url, current.isFileURL,
+              current.standardizedFileURL.path == playerURL?.standardizedFileURL.path else {
+            return (nil, "Native controls are unavailable for this page.")
+        }
+        if message.name == "openStrudel" {
+            guard let source = message.body as? String,
+                  !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  source.utf8.count <= 48_000 else { return (nil, "Choose a pattern to open in Strudel.") }
+            let encoded = Data(source.utf8).base64EncodedString()
+            var link = URLComponents()
+            link.scheme = "https"
+            link.host = "strudel.cc"
+            link.path = "/"
+            link.percentEncodedFragment = encoded.addingPercentEncoding(withAllowedCharacters:
+                CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
+            guard let url = link.url else { return (nil, "The Strudel link could not be encoded.") }
+            trackAnalysis.pausePlayback()
+            return (NSWorkspace.shared.open(url), nil)
+        }
+        guard let request = message.body as? [String: Any], let action = request["action"] as? String else {
+            return (nil, "Local analysis is unavailable for this request.")
+        }
+        do {
+            return (try await trackAnalysis.handle(action, message: request, window: window), nil)
+        } catch {
+            return (nil, error.localizedDescription)
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction) async -> WKNavigationActionPolicy {
@@ -74,18 +113,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
               let window = webView.window else { return nil }
 
         let panel = NSOpenPanel()
-        panel.title = "Open a Music Universe song"
+        panel.title = "Open a song package or analysis report"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        if let type = UTType(filenameExtension: "muv", conformingTo: .data) {
-            panel.allowedContentTypes = [type]
-        }
+        let songType = UTType(filenameExtension: "muv", conformingTo: .data)
+        panel.allowedContentTypes = [.json] + (songType.map { [$0] } ?? [])
 
         let response = await panel.beginSheetModal(for: window)
         guard response == .OK, let choice = panel.url,
-              choice.pathExtension.lowercased() == "muv" else { return nil }
+              ["muv", "json"].contains(choice.pathExtension.lowercased()) else { return nil }
         return [choice]
+    }
+
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        trackAnalysis.pausePlayback()
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -93,6 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        trackAnalysis.pausePlayback()
         guard let playerURL else { return }
         webView.loadFileURL(playerURL, allowingReadAccessTo: playerURL.deletingLastPathComponent())
     }
