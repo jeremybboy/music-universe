@@ -10,6 +10,18 @@ The description ranks an expandable inventory within each category by average co
 
 The web app can preview a browser-decodable recording from a local file and import an existing report. The public static build has no analysis service.
 
+## Split the drum stem on Mac
+
+After song analysis, select **Split Drums** to run Inverse Drum Machine on the existing Demucs drums. Playback can continue during the split. Once ready, toggle **Kick**, **Snare**, **Hi-hat**, and **Percussion remainder** on the same playhead as the other stems. Turning off one drum part while **Drums** is active keeps the other parts selected. The remainder retains the audio outside the three estimated classes, including uncategorized percussion, tails, or bleed, so all four sum back to the Demucs drum stem.
+
+Set up the optional model once from the Music Universe checkout, using the same Audio Analyst workspace selected in the app:
+
+```sh
+sh scripts/setup-idm.sh "/path/to/audio-analyst-workspace"
+```
+
+The setup uses the existing Python runtime and keeps the pinned, public [Inverse Drum Machine](https://github.com/bernardo-torres/inverse-drum-machine) checkout and checkpoint in a separate folder. Drum splitting then runs locally on CPU in overlapping windows. The app bundles its adapter. The local runtime supplies the model and weights.
+
 ## Import a completed report
 
 Use **Song Analysis → Import analysis report** to open an Audio Analyst schema v1 JSON file up to 2 MiB. Review the excerpt and confirm the song or expression explicitly. The app keeps one report per association for the loaded song instance, in session memory. An invalid import keeps the previous report and playback. Reloading the app clears the session.

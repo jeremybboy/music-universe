@@ -502,3 +502,9 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; }
   padding: 0.24rem 0;
 }
 .music-profile-facets li .destination-action { padding: 0.2rem 0.45rem; white-space: nowrap; }
+
+.track-drum-split { display: grid; gap: 0.55rem; justify-items: start; }
+.track-drum-split .track-progress { width: 100%; }
+.track-drum-split fieldset { margin: 0; padding: 0.55rem 0.7rem 0.65rem; min-width: 0; border: 1px solid #ffffff23; border-radius: 0.5rem; }
+.track-drum-split legend { padding: 0 0.3rem; color: #d8c9e7; font-size: 0.85rem; }
+.track-channels [aria-pressed="mixed"] { border-color: #c996fa; }

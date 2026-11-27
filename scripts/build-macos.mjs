@@ -62,7 +62,7 @@ try {
       .replace(entry, '<script defer src="./player.js"></script>'));
 
   copyFileSync(join(root, 'songs', 'Afterimage.muv'), join(player, 'Afterimage.muv'));
-  for (const helper of ['analyze-track.py', 'music_profile.py']) {
+  for (const helper of ['analyze-track.py', 'music_profile.py', 'split_drums.py']) {
     copyFileSync(join(native, helper), join(resources, helper));
   }
 

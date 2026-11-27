@@ -7,6 +7,10 @@ const stems = [
   ['drums', 'Drums'], ['bass', 'Bass'], ['other', 'Accompaniment'], ['vocals', 'Vocals'],
 ] as const;
 
+const drumParts = [
+  ['kick', 'Kick'], ['snare', 'Snare'], ['hihat', 'Hi-hat'], ['percussion', 'Percussion remainder'],
+] as const;
+
 function clock(time: number) {
   return Math.floor(time / 60) + ':' + String(Math.floor(time % 60)).padStart(2, '0');
 }
@@ -100,16 +104,20 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
   }
 
   const report = evidence?.id === status?.id ? evidence?.report : undefined;
-  const unavailable = Boolean(status?.reportReady && status.available.length < stems.length + 1);
+  const unavailable = Boolean(status?.reportReady && stems.some(([name]) => !status.available.includes(name)));
+  const split = status?.drumSplit;
+  const allDrums = status?.selected.includes('drums');
+  const selectedParts = drumParts.filter(([name]) => status?.selected.includes(name)).length;
+  const drumSelection = allDrums || selectedParts === drumParts.length ? true : selectedParts ? 'mixed' : false;
 
   return <section className="track-workspace" aria-labelledby="track-heading">
     <div className="destination-heading"><div><h2 id="track-heading">Analyze a recording</h2>
       <p>Audition the original and estimated stems, and see a description drawn from across the recording.</p></div>
       <div className="track-actions">
         <button className="destination-action" type="button" onClick={() => void act('configure')}
-          disabled={busy || !status || status.running}>{status?.connected ? 'Audio Analyst setup' : 'Connect Audio Analyst'}</button>
+          disabled={busy || !status || status.running || split?.running}>{status?.connected ? 'Audio Analyst setup' : 'Connect Audio Analyst'}</button>
         <button className="destination-action" type="button" onClick={() => void act('start')}
-          disabled={busy || !status?.connected || status.running}>Choose track</button>
+          disabled={busy || !status?.connected || status.running || split?.running}>Choose track</button>
       </div></div>
     {status?.source && <>
       <div className="track-progress"><strong>{status.source}</strong>
@@ -129,9 +137,29 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
       </div>
       <div className="track-channels" role="group" aria-label="Stem groups to play together">
         {stems.map(([stem, label]) => <button key={stem} type="button" className="destination-action"
-          aria-pressed={status.selected.includes(stem)} disabled={busy || !status.available.includes(stem)}
+          aria-pressed={stem === 'drums' ? drumSelection : status.selected.includes(stem)} disabled={busy || !status.available.includes(stem)}
           onClick={() => void act('toggleStem', { stem })}>{label}</button>)}
       </div>
+      {status.available.includes('drums') && split && <div className="track-drum-split">
+        {split.ready ? <fieldset className="track-channels">
+          <legend>Drum parts</legend>
+          {drumParts.map(([stem, label]) => <button key={stem} type="button" className="destination-action"
+            aria-pressed={allDrums || status.selected.includes(stem)} disabled={busy}
+            onClick={() => void act('toggleStem', { stem })}>{label}</button>)}
+        </fieldset> : <>
+          <button type="button" className="destination-action"
+            disabled={busy || status.running || (!split.running && !split.installed)}
+            onClick={() => void act(split.running ? 'cancelDrumSplit' : 'splitDrums')}>
+            {split.running ? 'Cancel drum split' : 'Split Drums'}
+          </button>
+          {!split.installed && <p>Set up the optional Inverse Drum Machine runtime in the Audio Analyst workspace.</p>}
+        </>}
+        {split.running && <div className="track-progress">
+          <div className="track-stage" aria-live="polite">{split.stage} · {split.percent}%</div>
+          <progress max={100} value={split.percent} aria-label="Drum split progress" />
+        </div>}
+        {split.error && <p role="alert" className="analysis-alert">{split.error}</p>}
+      </div>}
       {status.duration > 0 && <div className="track-seek">
         <span>{clock(status.position)}</span>
         <input type="range" min={0} max={status.duration} step={.01} value={status.position} aria-label="Recording position"
