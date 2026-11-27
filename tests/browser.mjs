@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer, preview } from 'vite';
 import { beaconPackage } from './fixtures.mjs';
+import { testDestinations } from './destinations.mjs';
 
 const pages = process.argv.includes('--pages');
 const pagesBase = '/music-universe/';
@@ -244,6 +245,10 @@ try {
   await mobile.getByRole('button', { name: 'Play', exact: true }).click();
   await mobile.getByRole('button', { name: 'Pause', exact: true }).waitFor();
 
+  await mobile.close();
+  await page.close();
+  await testDestinations(browser, url);
+
   const active = audio.frames.slice(6);
   const fps = 1000 * (active.length - 1) / (active.at(-1) - active[0]);
   console.log(JSON.stringify({
@@ -256,7 +261,8 @@ try {
     checks: ['audio present', 'bar-3 transition', 'queue replacement', 'transition signal continuity',
       'live canvas', 'mood', 'energy', 'intent', 'all layers silent', 'reduced motion', 'pause/resume',
       'Discover round-trip and transition', 'invalid import preserves playback', 'external package plays its own notes',
-      'artist permissions', 'keyboard focus', 'mobile width', 'no uncaught exceptions',
+      'artist permissions', 'offline analysis import and exact export', 'report scope isolation',
+      'external Strudel handoff and unavailable state', 'keyboard focus', 'mobile width', 'no uncaught exceptions',
       ...(pages ? ['Pages asset paths', 'no console or network errors'] : [])],
   }, null, 2));
 } finally {

@@ -5,6 +5,9 @@ import { canTransition, expressionFor, readUniverse } from '../music/universe/mo
 import { maxPackageBytes } from '../music/universe/zip.ts';
 import afterimageArchive from '../songs/Afterimage.muv?url&inline';
 import { Discover } from './Discover.tsx';
+import { SongAnalysis } from './SongAnalysis.tsx';
+import { StrudelPlayer } from './StrudelPlayer.tsx';
+import { AnalysisSession } from '../music/analysis-report.ts';
 import { Transport } from '../music/transport.ts';
 import { describePatch, instrumentLabels, parseIntent, type MusicConfigPatch } from '../music/state.ts';
 import { mountField } from '../visualization/field.ts';
@@ -28,10 +31,17 @@ function Glyph({ type }: { type: 'mark' | 'play' | 'pause' | 'arrow' | 'sound' |
     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{symbols[type]}</svg>;
 }
 
+const views = [
+  ['listen', 'Listen'], ['discover', 'Discover'], ['analysis', 'Song Analysis'], ['strudel', 'Strudel Player'],
+] as const;
+type View = typeof views[number][0];
+
 function Player() {
   const [state, setState] = useState(() => transport.snapshot());
   const [song, setSong] = useState(starterSong);
-  const [view, setView] = useState<'listen' | 'discover'>('listen');
+  const [view, setView] = useState<View>('listen');
+  const [analysisSession] = useState(() => new AnalysisSession());
+  const [strudelHandoff, setStrudelHandoff] = useState(false);
   const [loadingSong, setLoadingSong] = useState(false);
   const [fileError, setFileError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
@@ -102,7 +112,16 @@ function Player() {
     }
   }
 
+  function pauseForExternal(href: string) {
+    if (opening || loadingSong || strudelHandoff) return;
+    transport.pause();
+    setState(transport.snapshot());
+    setStrudelHandoff(true);
+    window.open(href, '_blank', 'noopener,noreferrer');
+  }
+
   async function toggle() {
+    if (strudelHandoff) return;
     setOpening(true);
     await transport.toggle();
     setState(transport.snapshot());
@@ -135,8 +154,8 @@ function Player() {
       <header className="header">
         <a href="./index.html" className="brand" aria-label="Music Universe home"><span><Glyph type="mark" /></span> Music Universe</a>
         <nav className="player-nav" aria-label="Player view">
-          <button type="button" aria-pressed={view === 'listen'} onClick={() => setView('listen')}>Listen</button>
-          <button type="button" aria-pressed={view === 'discover'} onClick={() => setView('discover')}>Discover</button>
+          {views.map(([id, label]) =>
+            <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}
         </nav>
         <div className="song-files">
           {song !== starterSong && <button type="button" disabled={loadingSong || opening}
@@ -229,6 +248,11 @@ function Player() {
       {view === 'discover' && <Discover song={song} state={state} currentBar={currentBar}
         selectWorld={world => { setFeedback(null); change({ world }); }} />}
 
+      {view === 'analysis' && <SongAnalysis song={song} world={active.id} session={analysisSession} />}
+      {view === 'strudel' && <StrudelPlayer songTitle={identity.title} expression={active.label} world={active.id}
+        bundledAfterimage={song === starterSong} disabled={opening || loadingSong} handoff={strudelHandoff}
+        pauseForExternal={pauseForExternal} />}
+
       <section className="stage" aria-label="Audio visualizer">
         <div className="stage-wash"></div>
         <canvas ref={field} aria-hidden="true" />
@@ -236,6 +260,10 @@ function Player() {
       </section>
 
       <footer className="transport">
+        {strudelHandoff && <div className="strudel-handoff">
+          <p>Stop playback in the Strudel tab before resuming Music Universe.</p>
+          <button type="button" className="destination-action" onClick={() => setStrudelHandoff(false)}>I stopped Strudel</button>
+        </div>}
         <div className="timeline" role="progressbar" aria-label="Position in the song loop" aria-valuemin={0}
           style={{ gridTemplateColumns: 'repeat(' + identity.bars + ', minmax(0, 1fr))' }}
           aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}
@@ -252,7 +280,7 @@ function Player() {
                 (state.applied ? 'Applied · Playing' : 'Playing') : opening ? 'Preparing audio…' : 'Ready to play')}
             </div>
           </div>
-          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening || loadingSong} onClick={toggle}>
+          <button type="button" className="play" aria-label={playing ? 'Pause' : 'Play'} disabled={opening || loadingSong || strudelHandoff} onClick={toggle}>
             <Glyph type={playing ? 'pause' : 'play'} />
           </button>
           <div className="right-transport">

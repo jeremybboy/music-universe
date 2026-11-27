@@ -74,17 +74,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
               let window = webView.window else { return nil }
 
         let panel = NSOpenPanel()
-        panel.title = "Open a Music Universe song"
+        panel.title = "Open a song package or analysis report"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        if let type = UTType(filenameExtension: "muv", conformingTo: .data) {
-            panel.allowedContentTypes = [type]
-        }
+        let songType = UTType(filenameExtension: "muv", conformingTo: .data)
+        panel.allowedContentTypes = [.json] + (songType.map { [$0] } ?? [])
 
         let response = await panel.beginSheetModal(for: window)
         guard response == .OK, let choice = panel.url,
-              choice.pathExtension.lowercased() == "muv" else { return nil }
+              ["muv", "json"].contains(choice.pathExtension.lowercased()) else { return nil }
         return [choice]
     }
 

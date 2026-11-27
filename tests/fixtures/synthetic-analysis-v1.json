@@ -1,0 +1,1571 @@
+{
+  "schema_version": 1,
+  "source": "synthetic-pulse.wav",
+  "excerpt": {
+    "start_s": 1.0,
+    "duration_s": 8.0,
+    "sample_rate_hz": 48000
+  },
+  "rhythm": {
+    "method": "low_band_onset_autocorrelation",
+    "status": "candidate",
+    "bpm_candidates": [
+      {
+        "bpm": 120.0,
+        "periodicity": 0.542
+      },
+      {
+        "bpm": 130.45,
+        "periodicity": 0.327
+      },
+      {
+        "bpm": 111.11,
+        "periodicity": 0.31
+      },
+      {
+        "bpm": 126.19,
+        "periodicity": 0.202
+      },
+      {
+        "bpm": 123.78,
+        "periodicity": 0.193
+      }
+    ],
+    "downbeats": [],
+    "limitations": [
+      "Includes half- and double-tempo candidates",
+      "Beat and bar locations require a tracker"
+    ],
+    "learned": {
+      "method": "Beat This!",
+      "model": "beat-this-small0.ckpt",
+      "checkpoint_bytes": 8451101,
+      "status": "candidate",
+      "bpm_median_interval": 120.0,
+      "beats": [
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0,
+        3.5,
+        4.0,
+        4.5,
+        5.0,
+        5.5,
+        6.0,
+        6.5,
+        7.0,
+        7.5,
+        8.0,
+        8.5,
+        9.0
+      ],
+      "downbeats": [
+        2.0,
+        4.0,
+        6.0,
+        8.0
+      ],
+      "limitations": [
+        "Beat-grid predictions can shift at cuts, sparse intros and unmetered passages"
+      ]
+    }
+  },
+  "tonality_and_hook": {
+    "method": "spectral_chroma_krumhansl_kessler",
+    "status": "candidate",
+    "tuning_cents_estimate": 3.1,
+    "candidates": [
+      {
+        "key": "A",
+        "mode": "minor",
+        "profile_correlation": 0.778
+      },
+      {
+        "key": "C",
+        "mode": "major",
+        "profile_correlation": 0.6
+      },
+      {
+        "key": "G",
+        "mode": "major",
+        "profile_correlation": 0.525
+      }
+    ],
+    "windows": [
+      {
+        "start_s": 1.0,
+        "end_s": 9.0,
+        "candidates": [
+          {
+            "key": "A",
+            "mode": "minor",
+            "profile_correlation": 0.778
+          },
+          {
+            "key": "C",
+            "mode": "major",
+            "profile_correlation": 0.6
+          },
+          {
+            "key": "G",
+            "mode": "major",
+            "profile_correlation": 0.525
+          }
+        ],
+        "first_second_margin": 0.178
+      }
+    ],
+    "limitations": [
+      "Profile correlations are heuristic scores",
+      "Mixed spectra do not establish voicing or hook notes"
+    ],
+    "essentia": {
+      "status": "not_requested"
+    },
+    "hook": {
+      "method": "Spotify Basic Pitch",
+      "status": "candidate",
+      "input_kind": "estimated_demucs_other",
+      "checkpoint_bytes": 230444,
+      "notes": [
+        {
+          "onset_s": 8.492,
+          "offset_s": 8.945,
+          "midi": 72,
+          "model_amplitude": 0.65
+        },
+        {
+          "onset_s": 7.993,
+          "offset_s": 8.469,
+          "midi": 69,
+          "model_amplitude": 0.577
+        },
+        {
+          "onset_s": 7.494,
+          "offset_s": 7.947,
+          "midi": 64,
+          "model_amplitude": 0.628
+        },
+        {
+          "onset_s": 6.983,
+          "offset_s": 7.471,
+          "midi": 67,
+          "model_amplitude": 0.648
+        },
+        {
+          "onset_s": 6.506,
+          "offset_s": 6.96,
+          "midi": 72,
+          "model_amplitude": 0.638
+        },
+        {
+          "onset_s": 5.995,
+          "offset_s": 6.448,
+          "midi": 69,
+          "model_amplitude": 0.568
+        },
+        {
+          "onset_s": 5.496,
+          "offset_s": 5.948,
+          "midi": 64,
+          "model_amplitude": 0.581
+        },
+        {
+          "onset_s": 4.985,
+          "offset_s": 5.461,
+          "midi": 67,
+          "model_amplitude": 0.641
+        },
+        {
+          "onset_s": 4.507,
+          "offset_s": 4.96,
+          "midi": 72,
+          "model_amplitude": 0.647
+        },
+        {
+          "onset_s": 3.997,
+          "offset_s": 4.461,
+          "midi": 69,
+          "model_amplitude": 0.571
+        },
+        {
+          "onset_s": 3.497,
+          "offset_s": 3.939,
+          "midi": 64,
+          "model_amplitude": 0.594
+        },
+        {
+          "onset_s": 2.987,
+          "offset_s": 3.463,
+          "midi": 67,
+          "model_amplitude": 0.621
+        },
+        {
+          "onset_s": 2.498,
+          "offset_s": 2.974,
+          "midi": 72,
+          "model_amplitude": 0.648
+        },
+        {
+          "onset_s": 1.998,
+          "offset_s": 2.451,
+          "midi": 69,
+          "model_amplitude": 0.564
+        },
+        {
+          "onset_s": 1.499,
+          "offset_s": 1.952,
+          "midi": 64,
+          "model_amplitude": 0.573
+        },
+        {
+          "onset_s": 1.012,
+          "offset_s": 1.453,
+          "midi": 67,
+          "model_amplitude": 0.614
+        },
+        {
+          "onset_s": 4.113,
+          "offset_s": 4.252,
+          "midi": 45,
+          "model_amplitude": 0.329
+        },
+        {
+          "onset_s": 1.151,
+          "offset_s": 1.29,
+          "midi": 43,
+          "model_amplitude": 0.324
+        }
+      ],
+      "limitations": [
+        "Multiple instruments and percussion can create false note candidates"
+      ]
+    }
+  },
+  "timbre": {
+    "method": "block_welch_and_stereo_power",
+    "status": "measured",
+    "sample_peak_dbfs": -6.43,
+    "stereo_rms_dbfs": -20.8,
+    "side_to_mid_db": -14.83,
+    "spectral_centroid_hz": 146.5,
+    "spectral_rolloff_85_hz": 328.1,
+    "limitations": [
+      "Mix-average descriptors",
+      "Effect type and settings require an audition or source evidence"
+    ],
+    "marked_hits": [
+      {
+        "status": "candidate",
+        "marker_s": 1.5,
+        "audible_onset_s_estimate": 1.4981,
+        "attack_10_to_90_ms": 12.2,
+        "tail_relative_power_db": -5.47,
+        "tail_side_to_mid_db": -14.21,
+        "limitations": [
+          "Envelope proxy around a supplied marker",
+          "Overlapping events can affect attack and tail"
+        ]
+      }
+    ],
+    "estimated_drums_hits": [
+      {
+        "status": "candidate",
+        "marker_s": 1.5,
+        "audible_onset_s_estimate": 1.498,
+        "attack_10_to_90_ms": 3.9,
+        "tail_relative_power_db": -9.82,
+        "tail_side_to_mid_db": -49.39,
+        "limitations": [
+          "Envelope proxy around a supplied marker",
+          "Overlapping events can affect attack and tail"
+        ]
+      }
+    ]
+  },
+  "separation": {
+    "method": "Demucs htdemucs",
+    "status": "candidate",
+    "checkpoint_bytes": 84141911,
+    "stems": [
+      "drums",
+      "bass",
+      "other",
+      "vocals"
+    ],
+    "shifts": 0,
+    "limitations": [
+      "Estimated stems can leak, omit voices and alter attacks or tails"
+    ]
+  },
+  "group_audit": {
+    "status": "candidate",
+    "groups": {
+      "mix": {
+        "input_kind": "stereo_mix",
+        "timbre": {
+          "method": "block_welch_and_stereo_power",
+          "status": "measured",
+          "sample_peak_dbfs": -6.43,
+          "stereo_rms_dbfs": -20.8,
+          "side_to_mid_db": -14.83,
+          "spectral_centroid_hz": 146.5,
+          "spectral_rolloff_85_hz": 328.1,
+          "limitations": [
+            "Mix-average descriptors",
+            "Effect type and settings require an audition or source evidence"
+          ],
+          "marked_hits": [
+            {
+              "status": "candidate",
+              "marker_s": 1.5,
+              "audible_onset_s_estimate": 1.4981,
+              "attack_10_to_90_ms": 12.2,
+              "tail_relative_power_db": -5.47,
+              "tail_side_to_mid_db": -14.21,
+              "limitations": [
+                "Envelope proxy around a supplied marker",
+                "Overlapping events can affect attack and tail"
+              ]
+            }
+          ]
+        },
+        "rhythm": {
+          "method": "low_band_onset_autocorrelation",
+          "status": "candidate",
+          "bpm_candidates": [
+            {
+              "bpm": 120.0,
+              "periodicity": 0.542
+            },
+            {
+              "bpm": 130.45,
+              "periodicity": 0.327
+            },
+            {
+              "bpm": 111.11,
+              "periodicity": 0.31
+            },
+            {
+              "bpm": 126.19,
+              "periodicity": 0.202
+            },
+            {
+              "bpm": 123.78,
+              "periodicity": 0.193
+            }
+          ],
+          "downbeats": [],
+          "limitations": [
+            "Includes half- and double-tempo candidates",
+            "Beat and bar locations require a tracker"
+          ],
+          "learned": {
+            "method": "Beat This!",
+            "model": "beat-this-small0.ckpt",
+            "checkpoint_bytes": 8451101,
+            "status": "candidate",
+            "bpm_median_interval": 120.0,
+            "beats": [
+              1.0,
+              1.5,
+              2.0,
+              2.5,
+              3.0,
+              3.5,
+              4.0,
+              4.5,
+              5.0,
+              5.5,
+              6.0,
+              6.5,
+              7.0,
+              7.5,
+              8.0,
+              8.5,
+              9.0
+            ],
+            "downbeats": [
+              2.0,
+              4.0,
+              6.0,
+              8.0
+            ],
+            "limitations": [
+              "Beat-grid predictions can shift at cuts, sparse intros and unmetered passages"
+            ]
+          }
+        },
+        "key_candidates": [
+          {
+            "key": "A",
+            "mode": "minor",
+            "profile_correlation": 0.778
+          },
+          {
+            "key": "C",
+            "mode": "major",
+            "profile_correlation": 0.6
+          },
+          {
+            "key": "G",
+            "mode": "major",
+            "profile_correlation": 0.525
+          }
+        ],
+        "notes": {
+          "method": "Spotify Basic Pitch",
+          "status": "candidate",
+          "input_kind": "stereo_mix",
+          "checkpoint_bytes": 230444,
+          "notes": [
+            {
+              "onset_s": 8.492,
+              "offset_s": 8.933,
+              "midi": 72,
+              "model_amplitude": 0.464
+            },
+            {
+              "onset_s": 8.434,
+              "offset_s": 8.933,
+              "midi": 45,
+              "model_amplitude": 0.546
+            },
+            {
+              "onset_s": 7.993,
+              "offset_s": 8.434,
+              "midi": 69,
+              "model_amplitude": 0.483
+            },
+            {
+              "onset_s": 7.993,
+              "offset_s": 8.423,
+              "midi": 45,
+              "model_amplitude": 0.555
+            },
+            {
+              "onset_s": 7.494,
+              "offset_s": 7.923,
+              "midi": 64,
+              "model_amplitude": 0.493
+            },
+            {
+              "onset_s": 7.482,
+              "offset_s": 7.935,
+              "midi": 36,
+              "model_amplitude": 0.555
+            },
+            {
+              "onset_s": 6.995,
+              "offset_s": 7.424,
+              "midi": 67,
+              "model_amplitude": 0.504
+            },
+            {
+              "onset_s": 6.983,
+              "offset_s": 7.413,
+              "midi": 43,
+              "model_amplitude": 0.641
+            },
+            {
+              "onset_s": 6.494,
+              "offset_s": 6.935,
+              "midi": 72,
+              "model_amplitude": 0.471
+            },
+            {
+              "onset_s": 6.494,
+              "offset_s": 6.889,
+              "midi": 45,
+              "model_amplitude": 0.58
+            },
+            {
+              "onset_s": 6.006,
+              "offset_s": 6.436,
+              "midi": 69,
+              "model_amplitude": 0.487
+            },
+            {
+              "onset_s": 5.995,
+              "offset_s": 6.424,
+              "midi": 45,
+              "model_amplitude": 0.573
+            },
+            {
+              "onset_s": 5.496,
+              "offset_s": 5.937,
+              "midi": 64,
+              "model_amplitude": 0.471
+            },
+            {
+              "onset_s": 5.472,
+              "offset_s": 6.006,
+              "midi": 36,
+              "model_amplitude": 0.557
+            },
+            {
+              "onset_s": 4.996,
+              "offset_s": 5.426,
+              "midi": 67,
+              "model_amplitude": 0.502
+            },
+            {
+              "onset_s": 4.985,
+              "offset_s": 5.438,
+              "midi": 43,
+              "model_amplitude": 0.629
+            },
+            {
+              "onset_s": 4.496,
+              "offset_s": 4.937,
+              "midi": 72,
+              "model_amplitude": 0.464
+            },
+            {
+              "onset_s": 4.438,
+              "offset_s": 4.902,
+              "midi": 45,
+              "model_amplitude": 0.539
+            },
+            {
+              "onset_s": 3.997,
+              "offset_s": 4.438,
+              "midi": 69,
+              "model_amplitude": 0.49
+            },
+            {
+              "onset_s": 3.985,
+              "offset_s": 4.426,
+              "midi": 45,
+              "model_amplitude": 0.569
+            },
+            {
+              "onset_s": 3.497,
+              "offset_s": 3.927,
+              "midi": 64,
+              "model_amplitude": 0.484
+            },
+            {
+              "onset_s": 3.474,
+              "offset_s": 3.939,
+              "midi": 36,
+              "model_amplitude": 0.548
+            },
+            {
+              "onset_s": 2.998,
+              "offset_s": 3.416,
+              "midi": 67,
+              "model_amplitude": 0.51
+            },
+            {
+              "onset_s": 2.987,
+              "offset_s": 3.416,
+              "midi": 43,
+              "model_amplitude": 0.64
+            },
+            {
+              "onset_s": 2.649,
+              "offset_s": 2.892,
+              "midi": 45,
+              "model_amplitude": 0.642
+            },
+            {
+              "onset_s": 2.498,
+              "offset_s": 2.939,
+              "midi": 72,
+              "model_amplitude": 0.475
+            },
+            {
+              "onset_s": 2.486,
+              "offset_s": 2.649,
+              "midi": 45,
+              "model_amplitude": 0.47
+            },
+            {
+              "onset_s": 1.987,
+              "offset_s": 2.428,
+              "midi": 69,
+              "model_amplitude": 0.482
+            },
+            {
+              "onset_s": 1.987,
+              "offset_s": 2.416,
+              "midi": 45,
+              "model_amplitude": 0.551
+            },
+            {
+              "onset_s": 1.511,
+              "offset_s": 1.917,
+              "midi": 64,
+              "model_amplitude": 0.493
+            },
+            {
+              "onset_s": 1.476,
+              "offset_s": 1.94,
+              "midi": 36,
+              "model_amplitude": 0.551
+            },
+            {
+              "onset_s": 1.012,
+              "offset_s": 1.418,
+              "midi": 43,
+              "model_amplitude": 0.653
+            },
+            {
+              "onset_s": 1.012,
+              "offset_s": 1.406,
+              "midi": 67,
+              "model_amplitude": 0.514
+            },
+            {
+              "onset_s": 4.066,
+              "offset_s": 4.403,
+              "midi": 35,
+              "model_amplitude": 0.419
+            },
+            {
+              "onset_s": 6.065,
+              "offset_s": 6.401,
+              "midi": 35,
+              "model_amplitude": 0.397
+            },
+            {
+              "onset_s": 2.08,
+              "offset_s": 2.393,
+              "midi": 35,
+              "model_amplitude": 0.395
+            },
+            {
+              "onset_s": 8.098,
+              "offset_s": 8.399,
+              "midi": 35,
+              "model_amplitude": 0.389
+            }
+          ],
+          "limitations": [
+            "Multiple instruments and percussion can create false note candidates"
+          ]
+        }
+      },
+      "drums": {
+        "input_kind": "estimated_demucs_drums",
+        "timbre": {
+          "method": "block_welch_and_stereo_power",
+          "status": "measured",
+          "sample_peak_dbfs": -8.66,
+          "stereo_rms_dbfs": -25.14,
+          "side_to_mid_db": -47.15,
+          "spectral_centroid_hz": 62.5,
+          "spectral_rolloff_85_hz": 70.3,
+          "limitations": [
+            "Mix-average descriptors",
+            "Effect type and settings require an audition or source evidence"
+          ]
+        },
+        "rms_relative_to_mix_db": -4.34,
+        "rhythm": {
+          "method": "low_band_onset_autocorrelation",
+          "status": "candidate",
+          "bpm_candidates": [
+            {
+              "bpm": 120.01,
+              "periodicity": 0.882
+            },
+            {
+              "bpm": 83.92,
+              "periodicity": 0.065
+            },
+            {
+              "bpm": 88.25,
+              "periodicity": 0.062
+            },
+            {
+              "bpm": 76.43,
+              "periodicity": 0.06
+            },
+            {
+              "bpm": 79.99,
+              "periodicity": 0.056
+            }
+          ],
+          "downbeats": [],
+          "limitations": [
+            "Includes half- and double-tempo candidates",
+            "Beat and bar locations require a tracker"
+          ]
+        },
+        "marked_hits": [
+          {
+            "status": "candidate",
+            "marker_s": 1.5,
+            "audible_onset_s_estimate": 1.498,
+            "attack_10_to_90_ms": 3.9,
+            "tail_relative_power_db": -9.82,
+            "tail_side_to_mid_db": -49.39,
+            "limitations": [
+              "Envelope proxy around a supplied marker",
+              "Overlapping events can affect attack and tail"
+            ]
+          }
+        ]
+      },
+      "bass": {
+        "input_kind": "estimated_demucs_bass",
+        "timbre": {
+          "method": "block_welch_and_stereo_power",
+          "status": "measured",
+          "sample_peak_dbfs": -17.08,
+          "stereo_rms_dbfs": -24.45,
+          "side_to_mid_db": -65.36,
+          "spectral_centroid_hz": 112.5,
+          "spectral_rolloff_85_hz": 128.9,
+          "limitations": [
+            "Mix-average descriptors",
+            "Effect type and settings require an audition or source evidence"
+          ]
+        },
+        "rms_relative_to_mix_db": -3.65,
+        "key": {
+          "method": "spectral_chroma_krumhansl_kessler",
+          "status": "candidate",
+          "tuning_cents_estimate": 0.3,
+          "candidates": [
+            {
+              "key": "A",
+              "mode": "minor",
+              "profile_correlation": 0.757
+            },
+            {
+              "key": "C",
+              "mode": "major",
+              "profile_correlation": 0.531
+            },
+            {
+              "key": "F",
+              "mode": "major",
+              "profile_correlation": 0.374
+            }
+          ],
+          "windows": [
+            {
+              "start_s": 1.0,
+              "end_s": 9.0,
+              "candidates": [
+                {
+                  "key": "A",
+                  "mode": "minor",
+                  "profile_correlation": 0.757
+                },
+                {
+                  "key": "C",
+                  "mode": "major",
+                  "profile_correlation": 0.531
+                },
+                {
+                  "key": "F",
+                  "mode": "major",
+                  "profile_correlation": 0.374
+                }
+              ],
+              "first_second_margin": 0.226
+            }
+          ],
+          "limitations": [
+            "Profile correlations are heuristic scores",
+            "Mixed spectra do not establish voicing or hook notes"
+          ]
+        },
+        "rhythm": {
+          "method": "low_band_onset_autocorrelation",
+          "status": "candidate",
+          "bpm_candidates": [
+            {
+              "bpm": 119.73,
+              "periodicity": 0.395
+            },
+            {
+              "bpm": 184.68,
+              "periodicity": 0.035
+            },
+            {
+              "bpm": 176.18,
+              "periodicity": 0.031
+            },
+            {
+              "bpm": 194.38,
+              "periodicity": 0.03
+            },
+            {
+              "bpm": 168.21,
+              "periodicity": 0.015
+            }
+          ],
+          "downbeats": [],
+          "limitations": [
+            "Includes half- and double-tempo candidates",
+            "Beat and bar locations require a tracker"
+          ]
+        },
+        "notes": {
+          "method": "Spotify Basic Pitch",
+          "status": "candidate",
+          "input_kind": "estimated_demucs_bass",
+          "checkpoint_bytes": 230444,
+          "notes": [
+            {
+              "onset_s": 8.516,
+              "offset_s": 8.945,
+              "midi": 45,
+              "model_amplitude": 0.602
+            },
+            {
+              "onset_s": 8.005,
+              "offset_s": 8.516,
+              "midi": 45,
+              "model_amplitude": 0.697
+            },
+            {
+              "onset_s": 7.505,
+              "offset_s": 7.923,
+              "midi": 48,
+              "model_amplitude": 0.619
+            },
+            {
+              "onset_s": 6.995,
+              "offset_s": 7.482,
+              "midi": 43,
+              "model_amplitude": 0.687
+            },
+            {
+              "onset_s": 6.517,
+              "offset_s": 6.958,
+              "midi": 45,
+              "model_amplitude": 0.642
+            },
+            {
+              "onset_s": 6.006,
+              "offset_s": 6.517,
+              "midi": 45,
+              "model_amplitude": 0.701
+            },
+            {
+              "onset_s": 5.496,
+              "offset_s": 5.948,
+              "midi": 48,
+              "model_amplitude": 0.596
+            },
+            {
+              "onset_s": 5.008,
+              "offset_s": 5.472,
+              "midi": 43,
+              "model_amplitude": 0.696
+            },
+            {
+              "onset_s": 4.519,
+              "offset_s": 4.972,
+              "midi": 45,
+              "model_amplitude": 0.659
+            },
+            {
+              "onset_s": 3.997,
+              "offset_s": 4.519,
+              "midi": 45,
+              "model_amplitude": 0.72
+            },
+            {
+              "onset_s": 3.497,
+              "offset_s": 3.95,
+              "midi": 48,
+              "model_amplitude": 0.587
+            },
+            {
+              "onset_s": 2.998,
+              "offset_s": 3.567,
+              "midi": 43,
+              "model_amplitude": 0.628
+            },
+            {
+              "onset_s": 2.649,
+              "offset_s": 2.962,
+              "midi": 45,
+              "model_amplitude": 0.617
+            },
+            {
+              "onset_s": 2.509,
+              "offset_s": 2.649,
+              "midi": 45,
+              "model_amplitude": 0.682
+            },
+            {
+              "onset_s": 1.998,
+              "offset_s": 2.509,
+              "midi": 45,
+              "model_amplitude": 0.711
+            },
+            {
+              "onset_s": 1.499,
+              "offset_s": 1.952,
+              "midi": 48,
+              "model_amplitude": 0.58
+            },
+            {
+              "onset_s": 1.012,
+              "offset_s": 1.476,
+              "midi": 43,
+              "model_amplitude": 0.703
+            }
+          ],
+          "limitations": [
+            "Multiple instruments and percussion can create false note candidates"
+          ]
+        }
+      },
+      "other": {
+        "input_kind": "estimated_demucs_other",
+        "timbre": {
+          "method": "block_welch_and_stereo_power",
+          "status": "measured",
+          "sample_peak_dbfs": -17.0,
+          "stereo_rms_dbfs": -27.99,
+          "side_to_mid_db": -7.01,
+          "spectral_centroid_hz": 422.3,
+          "spectral_rolloff_85_hz": 527.3,
+          "limitations": [
+            "Mix-average descriptors",
+            "Effect type and settings require an audition or source evidence"
+          ]
+        },
+        "rms_relative_to_mix_db": -7.19,
+        "key": {
+          "method": "spectral_chroma_krumhansl_kessler",
+          "status": "candidate",
+          "tuning_cents_estimate": 0.1,
+          "candidates": [
+            {
+              "key": "C",
+              "mode": "major",
+              "profile_correlation": 0.793
+            },
+            {
+              "key": "A",
+              "mode": "minor",
+              "profile_correlation": 0.765
+            },
+            {
+              "key": "E",
+              "mode": "minor",
+              "profile_correlation": 0.662
+            }
+          ],
+          "windows": [
+            {
+              "start_s": 1.0,
+              "end_s": 9.0,
+              "candidates": [
+                {
+                  "key": "C",
+                  "mode": "major",
+                  "profile_correlation": 0.793
+                },
+                {
+                  "key": "A",
+                  "mode": "minor",
+                  "profile_correlation": 0.765
+                },
+                {
+                  "key": "E",
+                  "mode": "minor",
+                  "profile_correlation": 0.662
+                }
+              ],
+              "first_second_margin": 0.028
+            }
+          ],
+          "limitations": [
+            "Profile correlations are heuristic scores",
+            "Mixed spectra do not establish voicing or hook notes"
+          ]
+        },
+        "notes": {
+          "method": "Spotify Basic Pitch",
+          "status": "candidate",
+          "input_kind": "estimated_demucs_other",
+          "checkpoint_bytes": 230444,
+          "notes": [
+            {
+              "onset_s": 8.492,
+              "offset_s": 8.945,
+              "midi": 72,
+              "model_amplitude": 0.65
+            },
+            {
+              "onset_s": 7.993,
+              "offset_s": 8.469,
+              "midi": 69,
+              "model_amplitude": 0.577
+            },
+            {
+              "onset_s": 7.494,
+              "offset_s": 7.947,
+              "midi": 64,
+              "model_amplitude": 0.628
+            },
+            {
+              "onset_s": 6.983,
+              "offset_s": 7.471,
+              "midi": 67,
+              "model_amplitude": 0.648
+            },
+            {
+              "onset_s": 6.506,
+              "offset_s": 6.96,
+              "midi": 72,
+              "model_amplitude": 0.638
+            },
+            {
+              "onset_s": 5.995,
+              "offset_s": 6.448,
+              "midi": 69,
+              "model_amplitude": 0.568
+            },
+            {
+              "onset_s": 5.496,
+              "offset_s": 5.948,
+              "midi": 64,
+              "model_amplitude": 0.581
+            },
+            {
+              "onset_s": 4.985,
+              "offset_s": 5.461,
+              "midi": 67,
+              "model_amplitude": 0.641
+            },
+            {
+              "onset_s": 4.507,
+              "offset_s": 4.96,
+              "midi": 72,
+              "model_amplitude": 0.647
+            },
+            {
+              "onset_s": 3.997,
+              "offset_s": 4.461,
+              "midi": 69,
+              "model_amplitude": 0.571
+            },
+            {
+              "onset_s": 3.497,
+              "offset_s": 3.939,
+              "midi": 64,
+              "model_amplitude": 0.594
+            },
+            {
+              "onset_s": 2.987,
+              "offset_s": 3.463,
+              "midi": 67,
+              "model_amplitude": 0.621
+            },
+            {
+              "onset_s": 2.498,
+              "offset_s": 2.974,
+              "midi": 72,
+              "model_amplitude": 0.648
+            },
+            {
+              "onset_s": 1.998,
+              "offset_s": 2.451,
+              "midi": 69,
+              "model_amplitude": 0.564
+            },
+            {
+              "onset_s": 1.499,
+              "offset_s": 1.952,
+              "midi": 64,
+              "model_amplitude": 0.573
+            },
+            {
+              "onset_s": 1.012,
+              "offset_s": 1.453,
+              "midi": 67,
+              "model_amplitude": 0.614
+            },
+            {
+              "onset_s": 4.113,
+              "offset_s": 4.252,
+              "midi": 45,
+              "model_amplitude": 0.329
+            },
+            {
+              "onset_s": 1.151,
+              "offset_s": 1.29,
+              "midi": 43,
+              "model_amplitude": 0.324
+            }
+          ],
+          "limitations": [
+            "Multiple instruments and percussion can create false note candidates"
+          ]
+        }
+      },
+      "vocals": {
+        "input_kind": "estimated_demucs_vocals",
+        "timbre": {
+          "method": "block_welch_and_stereo_power",
+          "status": "measured",
+          "sample_peak_dbfs": -43.58,
+          "stereo_rms_dbfs": -55.01,
+          "side_to_mid_db": -46.48,
+          "spectral_centroid_hz": 585.0,
+          "spectral_rolloff_85_hz": 550.8,
+          "limitations": [
+            "Mix-average descriptors",
+            "Effect type and settings require an audition or source evidence"
+          ]
+        },
+        "rms_relative_to_mix_db": -34.21
+      }
+    },
+    "limitations": [
+      "Stem measurements describe model estimates of this same excerpt",
+      "Levels are relative RMS measurements and do not add to 100 percent",
+      "Note candidates and voicings require comparison with the stereo mix"
+    ]
+  },
+  "reference_to_render_timing": {
+    "status": "needs_render_and_anchors"
+  },
+  "semantics": {
+    "method": "LAION CLAP2",
+    "model": "clap2-xxs-verified",
+    "status": "candidate",
+    "checkpoint_bytes": 109200100,
+    "score_type": "cosine_similarity",
+    "prompts": [
+      "A steady four-on-the-floor kick with a syncopated bass line",
+      "Swung or offbeat closed hi-hats over a house drum groove",
+      "A crisp clap followed by a short stereo room tail",
+      "Long bowed strings playing a melodic hook",
+      "Short filtered chord stabs with repeating echoes",
+      "Sparse minimal or microhouse dance music",
+      "Warm, sample-driven deep house dance music"
+    ],
+    "prompt_similarity": [
+      {
+        "prompt": "A steady four-on-the-floor kick with a syncopated bass line",
+        "cosine": 0.2192070186138153
+      },
+      {
+        "prompt": "Warm, sample-driven deep house dance music",
+        "cosine": 0.21719813346862793
+      },
+      {
+        "prompt": "Short filtered chord stabs with repeating echoes",
+        "cosine": 0.21657752990722656
+      },
+      {
+        "prompt": "Swung or offbeat closed hi-hats over a house drum groove",
+        "cosine": 0.19694864749908447
+      },
+      {
+        "prompt": "Sparse minimal or microhouse dance music",
+        "cosine": 0.19328531622886658
+      },
+      {
+        "prompt": "A crisp clap followed by a short stereo room tail",
+        "cosine": 0.16580194234848022
+      },
+      {
+        "prompt": "Long bowed strings playing a melodic hook",
+        "cosine": 0.16399706900119781
+      }
+    ],
+    "limitations": [
+      "Comparative semantic similarity",
+      "Prompt rankings are not calibrated labels or onset evidence"
+    ],
+    "embedding": [
+      0.0031582042574882507,
+      0.04544408991932869,
+      0.01598883979022503,
+      -0.0918089896440506,
+      -0.04011409357190132,
+      0.017484547570347786,
+      0.019663477316498756,
+      0.0491618774831295,
+      0.03433438017964363,
+      -0.015136200934648514,
+      -0.0834207832813263,
+      -0.022001443430781364,
+      -0.019393663853406906,
+      0.02747238613665104,
+      -0.00720604881644249,
+      -0.0005481443949975073,
+      -0.0004871204146184027,
+      -0.05787857249379158,
+      -0.041552383452653885,
+      -0.05393117666244507,
+      -0.010263812728226185,
+      -0.014966905117034912,
+      -0.014288883656263351,
+      -0.045171335339546204,
+      -0.027963100001215935,
+      0.0060270619578659534,
+      -0.04321250319480896,
+      -0.05598197504878044,
+      0.011717123910784721,
+      0.04040370136499405,
+      0.13264021277427673,
+      -0.002835474442690611,
+      0.01111108809709549,
+      -0.010330944322049618,
+      -0.002303197979927063,
+      -7.616504444740713e-05,
+      -0.050699133425951004,
+      -0.009269066154956818,
+      -0.014691988006234169,
+      -0.01555994525551796,
+      0.04105232283473015,
+      0.0006470337975770235,
+      -0.040856968611478806,
+      0.006698828190565109,
+      -0.041378092020750046,
+      0.008795645087957382,
+      0.004706456791609526,
+      0.06808952242136002,
+      -0.025048423558473587,
+      0.02252912148833275,
+      -0.0029699550941586494,
+      -0.008634747937321663,
+      0.07108599692583084,
+      -0.0007839521276764572,
+      -0.004321825224906206,
+      0.011060466058552265,
+      0.0031813173554837704,
+      -0.0007932900916785002,
+      -0.017526738345623016,
+      0.07343225181102753,
+      0.014459293335676193,
+      0.0360703244805336,
+      -0.002517413580790162,
+      0.017714953050017357,
+      -0.005633071530610323,
+      -0.00037897092988714576,
+      -0.07333540171384811,
+      0.08102568984031677,
+      0.12446917593479156,
+      -0.03276626765727997,
+      0.03690392151474953,
+      0.022034764289855957,
+      -0.04833178594708443,
+      -0.0006239499780349433,
+      0.0968828946352005,
+      -0.0018041470320895314,
+      0.052576944231987,
+      -0.025139521807432175,
+      0.006713112350553274,
+      -0.04591044411063194,
+      -0.029069598764181137,
+      -0.019261881709098816,
+      0.01664498820900917,
+      -0.09204651415348053,
+      0.03958634287118912,
+      0.002721089171245694,
+      -0.02411852404475212,
+      0.032774295657873154,
+      0.013608690351247787,
+      0.013341691344976425,
+      0.03796180337667465,
+      0.03399791195988655,
+      -0.02644519880414009,
+      0.04587710648775101,
+      -0.03416799008846283,
+      -0.014806537888944149,
+      -0.005303208716213703,
+      0.008166431449353695,
+      0.09836573898792267,
+      -0.0015551351243630052,
+      -0.008902501314878464,
+      -0.010561374947428703,
+      0.05185021832585335,
+      0.05136413872241974,
+      0.008078773505985737,
+      -0.00456357654184103,
+      0.025419851765036583,
+      -0.08456642180681229,
+      0.0012201968347653747,
+      -0.035402655601501465,
+      0.005476501304656267,
+      0.005906449165195227,
+      0.003219683887436986,
+      0.014490173198282719,
+      0.04087825119495392,
+      -0.000199190792045556,
+      0.009354139678180218,
+      0.002485563512891531,
+      -0.04699556156992912,
+      -0.025821030139923096,
+      -0.0031478176824748516,
+      -0.018035735934972763,
+      0.04437612369656563,
+      -0.025093596428632736,
+      0.0625120997428894,
+      0.01433535199612379,
+      0.00842713750898838,
+      -0.033132221549749374,
+      0.010182666592299938,
+      0.08993176370859146,
+      0.007907640188932419,
+      -0.004051108378916979,
+      0.030815647915005684,
+      -0.004242569673806429,
+      -0.03678975626826286,
+      0.013762743212282658,
+      -0.0005696255248039961,
+      0.011650241911411285,
+      0.006724839098751545,
+      -0.009109532460570335,
+      -0.001706042094156146,
+      0.012269500643014908,
+      -0.027129724621772766,
+      -0.00391929317265749,
+      -0.027331367135047913,
+      0.05116085335612297,
+      0.0021950257942080498,
+      0.0066197700798511505,
+      -0.006600438617169857,
+      -0.024068443104624748,
+      0.022476758807897568,
+      0.06493468582630157,
+      -0.008857249282300472,
+      -0.010070751421153545,
+      0.015187370590865612,
+      0.023396791890263557,
+      -0.0034874456468969584,
+      0.014369911514222622,
+      0.024542564526200294,
+      0.0027493019588291645,
+      0.08999807387590408,
+      -0.007095895241945982,
+      -0.04943820834159851,
+      0.020054709166288376,
+      0.0034594645258039236,
+      0.0041639795526862144,
+      -0.03996169567108154,
+      0.06366656720638275,
+      0.013543893583118916,
+      -0.04469885677099228,
+      -0.010327029041945934,
+      0.017924455925822258,
+      0.117955781519413,
+      -0.053040530532598495,
+      -0.03212311118841171,
+      -0.06838780641555786,
+      0.03527207300066948,
+      0.01125318929553032,
+      -0.8410844802856445,
+      -0.004105654079467058,
+      -0.02275562845170498,
+      -0.028089480474591255,
+      -0.024199258536100388,
+      0.004525519907474518,
+      -0.03662370890378952,
+      -0.027343450114130974,
+      -0.015617447905242443,
+      -0.02817460522055626,
+      0.004302499815821648,
+      -0.05883016064763069,
+      -0.0060620117001235485,
+      -0.005552568007260561,
+      0.04069311544299126,
+      0.02077315002679825,
+      -0.0013845233479514718,
+      0.013561218976974487,
+      0.0030389034654945135,
+      0.03773142024874687,
+      0.021722663193941116,
+      0.033083874732255936,
+      0.015119509771466255,
+      -0.023085342720150948,
+      0.04558766260743141,
+      -0.05282682180404663,
+      0.001757606165483594,
+      0.02806021086871624,
+      -0.01742258295416832,
+      0.028853312134742737,
+      -0.04867372661828995,
+      0.0036347592249512672,
+      -0.004506557714194059,
+      0.040980055928230286,
+      0.03260413929820061,
+      0.024178599938750267,
+      0.04210088774561882,
+      0.030689023435115814,
+      0.019561385735869408,
+      0.003933445084840059,
+      -0.04195528104901314,
+      0.010445022024214268,
+      -0.012166404165327549,
+      0.004323706496506929,
+      0.020321965217590332,
+      0.016495278105139732
+    ],
+    "excerpt": {
+      "start_s": 1.0,
+      "duration_s": 8.0
+    }
+  },
+  "agent_controls": [
+    {
+      "evidence": "rhythm",
+      "targets": [
+        "tempo",
+        "beat_and_bar_cues"
+      ]
+    },
+    {
+      "evidence": "tonality_and_hook",
+      "targets": [
+        "tonic",
+        "mode",
+        "note_candidates",
+        "gate_lengths"
+      ]
+    },
+    {
+      "evidence": "timbre",
+      "targets": [
+        "attack",
+        "release",
+        "brightness",
+        "stereo_space"
+      ]
+    },
+    {
+      "evidence": "reference_to_render_timing",
+      "targets": [
+        "sample_start",
+        "attack",
+        "event_offset"
+      ]
+    },
+    {
+      "evidence": "semantics",
+      "targets": [
+        "reference_search",
+        "audition_brief"
+      ]
+    }
+  ],
+  "audition": "review_required",
+  "compute": {
+    "machine": "arm64",
+    "device": "cpu",
+    "model_threads": 2,
+    "stages": {
+      "decode": {
+        "wall_s": 2.2726,
+        "cpu_s": 0.0186,
+        "process_peak_rss_mib": 109.8
+      },
+      "rhythm_dsp": {
+        "wall_s": 0.0258,
+        "cpu_s": 0.0247,
+        "process_peak_rss_mib": 110.4
+      },
+      "beat_this": {
+        "wall_s": 4.6913,
+        "cpu_s": 3.8505,
+        "process_peak_rss_mib": 325.8
+      },
+      "key_dsp": {
+        "wall_s": 0.0759,
+        "cpu_s": 0.0707,
+        "process_peak_rss_mib": 373.3
+      },
+      "demucs": {
+        "wall_s": 24.431,
+        "cpu_s": 35.6334,
+        "process_peak_rss_mib": 1915.5
+      },
+      "basic_pitch": {
+        "wall_s": 2.4177,
+        "cpu_s": 2.5196,
+        "process_peak_rss_mib": 1915.5
+      },
+      "timbre": {
+        "wall_s": 0.0517,
+        "cpu_s": 0.0471,
+        "process_peak_rss_mib": 1915.5
+      },
+      "marked_hit_envelopes": {
+        "wall_s": 0.0103,
+        "cpu_s": 0.0056,
+        "process_peak_rss_mib": 1915.5
+      },
+      "estimated_drums_hit_envelopes": {
+        "wall_s": 0.0042,
+        "cpu_s": 0.0036,
+        "process_peak_rss_mib": 1915.5
+      },
+      "clap2": {
+        "wall_s": 8.5875,
+        "cpu_s": 7.5098,
+        "process_peak_rss_mib": 1915.5
+      },
+      "drums_timbre": {
+        "wall_s": 0.0422,
+        "cpu_s": 0.0361,
+        "process_peak_rss_mib": 1915.5
+      },
+      "drums_rhythm": {
+        "wall_s": 0.0302,
+        "cpu_s": 0.0283,
+        "process_peak_rss_mib": 1915.5
+      },
+      "bass_timbre": {
+        "wall_s": 0.0343,
+        "cpu_s": 0.0327,
+        "process_peak_rss_mib": 1915.5
+      },
+      "bass_key": {
+        "wall_s": 0.0606,
+        "cpu_s": 0.0571,
+        "process_peak_rss_mib": 1915.5
+      },
+      "bass_rhythm": {
+        "wall_s": 0.0229,
+        "cpu_s": 0.0217,
+        "process_peak_rss_mib": 1915.5
+      },
+      "other_timbre": {
+        "wall_s": 0.0327,
+        "cpu_s": 0.0317,
+        "process_peak_rss_mib": 1915.5
+      },
+      "other_key": {
+        "wall_s": 0.0554,
+        "cpu_s": 0.0531,
+        "process_peak_rss_mib": 1915.5
+      },
+      "vocals_timbre": {
+        "wall_s": 0.0295,
+        "cpu_s": 0.0289,
+        "process_peak_rss_mib": 1915.5
+      },
+      "mix_pitch": {
+        "wall_s": 0.2602,
+        "cpu_s": 0.9012,
+        "process_peak_rss_mib": 1915.5
+      },
+      "bass_pitch": {
+        "wall_s": 0.2916,
+        "cpu_s": 1.0273,
+        "process_peak_rss_mib": 1915.5
+      }
+    },
+    "total_wall_s": 43.429,
+    "process_peak_rss_mib": 1915.5,
+    "rss_note": "Cumulative high-water mark for this process, not separate stage allocations"
+  }
+}
