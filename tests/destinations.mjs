@@ -131,7 +131,7 @@ export async function testDestinations(browser, url) {
     await context.setOffline(false);
     await launch.waitFor();
     await page.getByRole('button', { name: 'Load Afterimage pattern', exact: true }).click();
-    assert.equal(await page.getByRole('alert').filter({ hasText: /Each track starts/ }).count(), 0);
+    await page.getByRole('alert').filter({ hasText: /Each track starts/ }).waitFor({ state: 'hidden' });
     assert.equal(externalRequests, 0);
     if (process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT) {
       await page.screenshot({ path: process.env.MUSIC_UNIVERSE_STRUDEL_SCREENSHOT, fullPage: true });
