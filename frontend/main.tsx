@@ -139,6 +139,11 @@ function Player() {
     setView(next);
   }
 
+  function editPattern(source: string) {
+    setPatternSource(source);
+    setPatternError('');
+  }
+
   async function playPattern() {
     if (opening || loadingSong || strudelHandoff) return;
     setPatternError('');
@@ -293,7 +298,7 @@ function Player() {
       {view === 'analysis' && <SongAnalysis song={song} world={active.id} session={analysisSession} claimAudio={claimAudio} />}
       {view === 'strudel' && <StrudelPlayer songTitle={identity.title} expression={active.label} world={active.id}
         bundledAfterimage={song === starterSong} disabled={opening || loadingSong} handoff={strudelHandoff}
-        pauseForExternal={pauseForExternal} source={patternSource} setSource={setPatternSource}
+        pauseForExternal={pauseForExternal} source={patternSource} setSource={editPattern}
         running={patternRunning} error={patternError} playPattern={playPattern} stopPattern={stopPattern} />}
 
       <section className="stage" aria-label="Audio visualizer">
