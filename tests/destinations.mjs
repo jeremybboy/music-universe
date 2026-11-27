@@ -5,8 +5,12 @@ import { beaconPackage } from './fixtures.mjs';
 const report = readFileSync(new URL('./fixtures/synthetic-analysis-v1.json', import.meta.url));
 const data = JSON.parse(report);
 const pattern = readFileSync(new URL('../music/renditions/afterimage-intimate.strudel', import.meta.url), 'utf8');
+const comparison = { label: 'Latin house', prompt: 'A Latin house track.', mean_cosine: .25, peak_start_s: 24, peak_end_s: 32 };
 const minimal = Buffer.from(JSON.stringify({
   schema_version: 1, source: 'Minimal synthetic excerpt', excerpt: { start_s: 4, duration_s: 2, sample_rate_hz: 48000 },
+  song_profile: { status: 'candidate', method: 'Synthetic test', model: 'fixture', duration_s: 32,
+    inventory: [{ facet: 'genre', label: comparison.label, prompt: comparison.prompt }],
+    excerpts: [{ start_s: 24, end_s: 32, scores: [.25] }], facets: { genre: [comparison] } },
 }));
 
 export async function testDestinations(browser, url) {
@@ -83,6 +87,10 @@ export async function testDestinations(browser, url) {
     await importReport('minimal.json', minimal);
     await page.getByRole('button', { name: 'Attach report', exact: true }).click();
     await page.getByRole('heading', { name: 'Minimal synthetic excerpt', exact: true }).waitFor();
+    const profile = page.getByRole('region', { name: 'Song description' });
+    await profile.getByText('The closest style matches are', { exact: false }).waitFor();
+    await profile.getByText('0:24–0:32', { exact: true }).waitFor();
+    assert.equal(await page.getByRole('heading', { name: 'CLAP2 prompt similarity' }).count(), 0);
     await nav('Strudel Player').click();
     await page.getByRole('heading', { name: /No rendition.*Club/ }).waitFor();
     const code = page.getByRole('textbox', { name: 'Pattern code' });

@@ -67,13 +67,15 @@ export function readAnalysisReport(bytes: Uint8Array): AnalysisReport {
   }
 
   for (const key of ['rhythm', 'tonality_and_hook', 'timbre', 'separation', 'group_audit',
-    'reference_to_render_timing', 'semantics', 'compute']) {
+    'reference_to_render_timing', 'semantics', 'song_profile', 'compute']) {
     if (data[key] !== undefined && !asObject(data[key])) {
       throw new Error('The optional ' + key + ' section must be an object.');
     }
   }
   const semantics = asObject(data.semantics);
   if (semantics) validateSemantics(semantics);
+  const profile = asObject(data.song_profile);
+  if (profile?.status === 'candidate') validateProfile(profile);
 
   return { source: data.source, excerpt: { start: excerpt.start_s, duration: excerpt.duration_s,
     sampleRate: excerpt.sample_rate_hz }, data, original };
@@ -106,6 +108,32 @@ function validateSemantics(semantics: JsonObject) {
       throw new Error('CLAP2 scores must match the supplied prompts and contain valid cosine values.');
     }
     counts.set(score.prompt, counts.get(score.prompt)! - 1);
+  }
+}
+
+function validateProfile(profile: JsonObject) {
+  const { duration_s: duration, excerpts, inventory, facets } = profile;
+  const rankings = asObject(facets);
+  if (!finite(duration) || duration <= 0 || !Array.isArray(inventory) || !inventory.length ||
+      inventory.length > 512 || !Array.isArray(excerpts) || !excerpts.length || excerpts.length > 32 || !rankings) {
+    throw new Error('The song description needs a valid recording duration, prompt inventory, and excerpts.');
+  }
+  const comparison = (value: unknown): value is number => finite(value) && Math.abs(value) <= 1.000001;
+  const validSpan = (start: unknown, end: unknown) =>
+    finite(start) && finite(end) && start >= 0 && start < end && end <= duration;
+  for (const item of excerpts) {
+    const excerpt = asObject(item);
+    if (!excerpt || !validSpan(excerpt.start_s, excerpt.end_s) || !Array.isArray(excerpt.scores) ||
+        excerpt.scores.length !== inventory.length || !excerpt.scores.every(comparison)) {
+      throw new Error('Song description excerpts need valid timestamps and a score for each description.');
+    }
+  }
+  for (const group of Object.values(rankings)) {
+    if (!Array.isArray(group) || group.length > inventory.length || !group.every(item => {
+      const candidate = asObject(item);
+      return candidate && typeof candidate.label === 'string' && comparison(candidate.mean_cosine) &&
+        validSpan(candidate.peak_start_s, candidate.peak_end_s);
+    })) throw new Error('Song description rankings must have labels, scores, and evidence timestamps.');
   }
 }
 

@@ -4,16 +4,20 @@ import subprocess
 import sys
 from pathlib import Path
 
+from music_profile import describe
+
 workspace, source, output = map(Path, sys.argv[1:4])
 tools = workspace / "work/audio-analyst"
 sys.path.insert(0, str(workspace / "outputs/audio-analyst"))
 
 steps = ("Decode the full track", "Tempo and beats", "Key", "Separate the full track",
-         "Candidate notes", "Timbre", "CLAP2", "Compare the stems", "Save the report")
+         "Candidate notes", "Timbre", "Compare the stems", "Describe the song", "Save the report")
 
 
-def progress(step, *, error=None):
+def progress(step, *, detail=None, error=None):
     status = {"percent": round(step * 100 / len(steps)), "stage": steps[step] if step < len(steps) else "Complete"}
+    if detail:
+        status["stage"] += " · " + detail
     if error:
         status["error"] = error
     temp = output / "progress.tmp"
@@ -62,7 +66,7 @@ def run():
 
     analyst.models.separate = separate_full
     timed = analyst.timed
-    stages = {"key_dsp": 2, "demucs": 3, "basic_pitch": 4, "timbre": 5, "clap2": 6, "drums_timbre": 7}
+    stages = {"key_dsp": 2, "demucs": 3, "basic_pitch": 4, "timbre": 5, "drums_timbre": 6}
 
     def report_stage(measurements, name, operation, optional=False):
         if name in stages:
@@ -75,7 +79,6 @@ def run():
     options = {
         "--beat-model": checkpoints / "beat-this-small0.ckpt",
         "--pitch-model": tools / "deps/basic_pitch/saved_models/icassp_2022/nmp.onnx",
-        "--semantic-model": checkpoints / "clap2-xxs-verified",
         "--demucs-model": checkpoints / "955717e8-8726e21a.th",
     }
     for flag, path in options.items():
@@ -84,6 +87,20 @@ def run():
     args = analyst.cli()
     args.stem_audit = args.demucs_model is not None
     report = analyst.analyse(args)
+    model = checkpoints / "clap2-xxs-verified"
+    if model.is_dir():
+        progress(7)
+        report["song_profile"] = timed(
+            report["compute"]["stages"], "clap2_song_profile",
+            lambda: describe(audio, rate, model, analyst.models.clap2,
+                             lambda current, total: progress(7, detail=f"Excerpt {current} of {total}")),
+            optional=True,
+        )
+    else:
+        report["song_profile"] = {
+            "status": "not_requested",
+            "reason": "Install the local CLAP2 checkpoint to describe the song.",
+        }
     progress(8)
     (output / "report.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf8")

@@ -104,7 +104,7 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
 
   return <section className="track-workspace" aria-labelledby="track-heading">
     <div className="destination-heading"><div><h2 id="track-heading">Analyze a recording</h2>
-      <p>Hear the full recording and estimated stems. The report measures the opening 24 seconds.</p></div>
+      <p>Audition the original and estimated stems, and see a description drawn from across the recording.</p></div>
       <div className="track-actions">
         <button className="destination-action" type="button" onClick={() => void act('configure')}
           disabled={busy || !status || status.running}>{status?.connected ? 'Audio Analyst setup' : 'Connect Audio Analyst'}</button>
@@ -135,6 +135,8 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
     </>}
     {unavailable && <p>Some stems are unavailable. Check that the local Demucs checkpoint is installed and separation succeeded.</p>}
     {(error || status?.error) && <p role="alert" className="analysis-alert">{error || status?.error}</p>}
-    {report && <AnalysisEvidence report={report} />}
+    {report && <AnalysisEvidence report={report} auditionAt={seconds => {
+      if (!busyRef.current && claimAudio()) void act('play', { channel: 'mix', seconds });
+    }} />}
   </section>;
 }

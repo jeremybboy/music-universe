@@ -62,7 +62,9 @@ try {
       .replace(entry, '<script defer src="./player.js"></script>'));
 
   copyFileSync(join(root, 'songs', 'Afterimage.muv'), join(player, 'Afterimage.muv'));
-  copyFileSync(join(native, 'analyze-track.py'), join(resources, 'analyze-track.py'));
+  for (const helper of ['analyze-track.py', 'music_profile.py']) {
+    copyFileSync(join(native, helper), join(resources, helper));
+  }
 
   mkdirSync(join(contents, 'MacOS'), { recursive: true });
   const arch = process.arch === 'arm64' ? 'arm64' : 'x86_64';

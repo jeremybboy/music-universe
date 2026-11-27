@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { MusicProfile } from './MusicProfile.tsx';
 import { asObject, objects, type AnalysisReport, type JsonObject, type JsonValue } from '../music/analysis-report.ts';
 
 const text = (value: JsonValue | undefined) => typeof value === 'string' ? value : '';
@@ -54,7 +55,7 @@ const range = (start: JsonValue | undefined, end: JsonValue | undefined) => seco
 const names = { mix: 'Stereo mix', drums: 'Estimated drums', bass: 'Estimated bass',
   other: 'Estimated accompaniment', vocals: 'Estimated vocals' };
 
-export function AnalysisEvidence({ report }: { report: AnalysisReport }) {
+export function AnalysisEvidence({ report, auditionAt }: { report: AnalysisReport; auditionAt?: (seconds: number) => void }) {
   const { data } = report;
   const rhythm = asObject(data.rhythm);
   const learned = asObject(rhythm?.learned);
@@ -63,6 +64,7 @@ export function AnalysisEvidence({ report }: { report: AnalysisReport }) {
   const essentia = asObject(tonal?.essentia);
   const timbre = asObject(data.timbre);
   const semantics = asObject(data.semantics);
+  const profile = asObject(data.song_profile);
   const semanticExcerpt = asObject(semantics?.excerpt);
   const separation = asObject(data.separation);
   const groupAudit = asObject(data.group_audit);
@@ -87,6 +89,8 @@ export function AnalysisEvidence({ report }: { report: AnalysisReport }) {
       topKey?.[0] ?? '—']];
   });
   return (
+    <>
+    {profile && <MusicProfile profile={profile} auditionAt={auditionAt} />}
     <div className="evidence-grid" aria-label="Recording evidence">
       <Evidence title="Tempo and pulse" section={rhythm}>
         <Table caption="Tempo candidates" columns={['Tempo', 'Periodicity']} rows={objects(rhythm?.bpm_candidates)
@@ -133,13 +137,13 @@ export function AnalysisEvidence({ report }: { report: AnalysisReport }) {
           ].map(([input, hit]) => [input, seconds(hit.marker_s), seconds(hit.audible_onset_s_estimate),
             numeric(hit.attack_10_to_90_ms, ' ms')])} /></details>}
       </Evidence>
-      <Evidence title="CLAP2 prompt similarity" section={semantics}>
+      {(!profile || semantics?.status === 'candidate') && <Evidence title="CLAP2 prompt similarity" section={semantics}>
         {semanticExcerpt && <p>Model excerpt starts at {seconds(semanticExcerpt.start_s)} · {seconds(semanticExcerpt.duration_s)} long</p>}
         <Table caption="CLAP2 scores" columns={['Prompt', 'Cosine similarity']}
           rows={scores.map(row => [text(row.prompt), numeric(row.cosine)])} />
         <p>{Array.isArray(semantics?.embedding) ?
           'Audio embedding retained · ' + semantics.embedding.length + ' values' : 'No audio embedding saved.'}</p>
-      </Evidence>
+      </Evidence>}
       <Evidence title="Demucs estimates" section={separation}>
         <p>Drums, bass, accompaniment, and vocals are model estimates.</p>
         {inferredStems.length > 0 && <p>Reported groups {inferredStems.map(name => Object.hasOwn(names, name) ? names[name as keyof typeof names] : name).join(' · ')}</p>}
@@ -153,5 +157,6 @@ export function AnalysisEvidence({ report }: { report: AnalysisReport }) {
             numeric(row.relative_render_lateness_ms, ' ms')])} />
       </Evidence>}
     </div>
+    </>
   );
 }

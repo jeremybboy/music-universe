@@ -480,3 +480,25 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; }
   tab-size: 2;
 }
 .pattern-workbench textarea:focus { outline: 2px solid #c996fa; outline-offset: 1px; }
+
+.music-profile {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ab8ad259;
+  border-radius: 0.75rem;
+  background: #9c71d116;
+}
+.music-profile h3, .music-profile h4, .music-profile p { margin: 0; }
+.music-profile > p { line-height: 1.55; }
+.music-profile-facets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 0.7rem; }
+.music-profile-facets ul, .music-profile-facets ol { margin: 0.45rem 0; padding: 0; list-style: none; }
+.music-profile-facets li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.24rem 0;
+}
+.music-profile-facets li .destination-action { padding: 0.2rem 0.45rem; white-space: nowrap; }

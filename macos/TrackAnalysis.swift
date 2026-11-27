@@ -42,7 +42,7 @@ final class TrackAnalysis {
             guard let requested = message["channel"] as? String, sources.contains(requested) else {
                 throw fail("Choose the original or an available stem.")
             }
-            try play(requested)
+            try play(requested, seconds: message["seconds"] as? Double)
             return status()
         case "pause":
             pausePlayback()
@@ -160,17 +160,17 @@ final class TrackAnalysis {
         return data
     }
 
-    private func play(_ requested: String) throws {
+    private func play(_ requested: String, seconds: Double?) throws {
         guard let output else { throw fail("Choose an audio track first.") }
         let chosen = output.appendingPathComponent(requested + ".wav")
         guard fileManager.fileExists(atPath: chosen.path) else { throw fail("That audio is still being prepared.") }
+        let position = seconds.flatMap { $0.isFinite ? max(0, $0) : nil } ?? audio?.currentTime ?? 0
         if let audio, requested == channel {
-            if audio.currentTime >= audio.duration - 0.01 { audio.currentTime = 0 }
+            audio.currentTime = position >= audio.duration - 0.01 ? 0 : position
             guard audio.play() else { throw fail("The audio output could not start.") }
             return
         }
         let next = try AVAudioPlayer(contentsOf: chosen)
-        let position = audio?.currentTime ?? 0
         next.volume = volume
         next.currentTime = position >= next.duration - 0.01 ? 0 : position
         audio?.stop()
