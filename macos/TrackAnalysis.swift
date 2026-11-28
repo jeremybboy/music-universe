@@ -7,6 +7,9 @@ final class TrackAnalysis {
     private let defaultsKey = "AudioAnalystWorkspace"
     private let playback = TrackPlayback()
     private var process: Process?
+    private var drumProcess: Process?
+    private var drumCancelled = false
+    private var isBusy: Bool { process?.isRunning == true || drumProcess?.isRunning == true }
     private var output: URL?
     private var source: URL?
     private var cancelled = false
@@ -16,7 +19,7 @@ final class TrackAnalysis {
         case "status":
             return status()
         case "configure":
-            guard process?.isRunning != true else { throw fail("Wait for the current analysis to finish.") }
+            guard !isBusy else { throw fail("Wait for the current analysis to finish.") }
             let panel = NSOpenPanel()
             panel.title = "Choose the Audio Analyst workspace"
             panel.message = "Choose the folder that contains the work/audio-analyst and outputs/audio-analyst directories."
@@ -32,6 +35,15 @@ final class TrackAnalysis {
             if process?.isRunning == true {
                 cancelled = true
                 process?.terminate()
+            }
+            return status()
+        case "splitDrums":
+            try splitDrums()
+            return status()
+        case "cancelDrumSplit":
+            if drumProcess?.isRunning == true {
+                drumCancelled = true
+                drumProcess?.terminate()
             }
             return status()
         case "play":
@@ -81,12 +93,13 @@ final class TrackAnalysis {
 
     func cleanUp() {
         playback.reset()
-        if let process, process.isRunning {
+        let active = drumProcess?.isRunning == true ? drumProcess : process
+        if let active, active.isRunning {
             let directory = output
-            process.terminationHandler = { _ in
+            active.terminationHandler = { _ in
                 if let directory { try? FileManager.default.removeItem(at: directory) }
             }
-            process.terminate()
+            active.terminate()
         } else if let output {
             try? fileManager.removeItem(at: output)
         }
@@ -104,7 +117,8 @@ final class TrackAnalysis {
     }
 
     private func start(_ window: NSWindow) async throws -> [String: Any] {
-        guard process?.isRunning != true, let workspace else { throw fail("Connect Audio Analyst before starting a track.") }
+        guard !isBusy else { throw fail("Wait for the current analysis to finish.") }
+        guard let workspace else { throw fail("Connect Audio Analyst before starting a track.") }
         let panel = NSOpenPanel()
         panel.title = "Analyze an audio track"
         panel.allowedContentTypes = [.audio]
@@ -135,9 +149,69 @@ final class TrackAnalysis {
         cleanUp()
         self.output = output
         self.process = process
+        drumProcess = nil
+        drumCancelled = false
         source = choice
         cancelled = false
         return status()
+    }
+
+    private var drumInstallation: URL? {
+        guard let workspace else { return nil }
+        let local = workspace.appendingPathComponent("work/audio-analyst/mdx-local")
+        let model = "models/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059"
+        guard fileManager.isReadableFile(atPath: local.appendingPathComponent(model + ".ckpt").path),
+              fileManager.isReadableFile(atPath: local.appendingPathComponent(model + ".yaml").path),
+              fileManager.isReadableFile(atPath: local.appendingPathComponent("source/src/mdxnet_infer/inference.py").path)
+        else { return nil }
+        return local
+    }
+
+    private func splitDrums() throws {
+        guard !isBusy, let output else { throw fail("Wait for song analysis to finish.") }
+        guard let local = drumInstallation else { throw fail("Run the MDX23C setup script first.") }
+        guard playback.available.contains("drums") else { throw fail("An estimated drum stem is required.") }
+        guard !fileManager.fileExists(atPath: output.appendingPathComponent("drum-parts").path) else { return }
+        guard let helper = Bundle.main.url(forResource: "split_drums", withExtension: "py") else {
+            throw fail("The drum split helper is missing from this build.")
+        }
+
+        let progress = output.appendingPathComponent("drum-split-progress.json")
+        if fileManager.fileExists(atPath: progress.path) { try fileManager.removeItem(at: progress) }
+        let runtime = local.deletingLastPathComponent()
+        let process = Process()
+        process.executableURL = runtime.appendingPathComponent("runtime/bin/python")
+        process.arguments = [helper.path, local.path, output.path]
+        process.environment = [
+            "PYTHONPATH": runtime.appendingPathComponent("deps").path,
+            "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "HF_HUB_DISABLE_TELEMETRY": "1",
+            "PYTHONDONTWRITEBYTECODE": "1", "NUMBA_CACHE_DIR": output.path,
+        ]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        drumCancelled = false
+        drumProcess = process
+    }
+
+    private func drumStatus(_ directory: URL) -> [String: Any] {
+        let running = drumProcess?.isRunning == true
+        var result: [String: Any] = [
+            "installed": drumInstallation != nil, "running": running,
+            "ready": playback.hasDrumParts, "percent": 0, "stage": "Preparing drum split",
+        ]
+        let url = directory.appendingPathComponent("drum-split-progress.json")
+        if let bytes = try? Data(contentsOf: url),
+           let details = try? JSONSerialization.jsonObject(with: bytes) as? [String: Any] {
+            for key in ["percent", "stage", "error", "wall_s", "startup_s", "peak_rss_mib"] { result[key] = details[key] }
+        }
+        if drumCancelled && !playback.hasDrumParts {
+            result["stage"] = running ? "Cancelling drum split" : "Drum split cancelled"
+            result["error"] = nil
+        } else if drumProcess != nil, !running, !playback.hasDrumParts, result["error"] == nil {
+            result["error"] = "MDX23C exited before producing the drum parts."
+        }
+        return result
     }
 
     private func publishAudio() {
@@ -149,12 +223,13 @@ final class TrackAnalysis {
         var data: [String: Any] = [
             "connected": workspace != nil, "running": process?.isRunning == true, "available": playback.available,
             "percent": 0, "stage": "Preparing audio", "usesOriginal": playback.usesOriginal,
-            "selected": TrackPlayback.stemNames.filter { playback.selected.contains($0) },
+            "selected": TrackPlayback.selectableNames.filter { playback.selected.contains($0) },
             "playing": playback.isPlaying, "position": playback.position, "duration": playback.duration,
         ]
         guard let output, let source, let process else { return data }
         data["id"] = output.lastPathComponent
         data["source"] = source.lastPathComponent
+        data["drumSplit"] = drumStatus(output)
         if let buffer = try? Data(contentsOf: output.appendingPathComponent("progress.json")),
            let step = try? JSONSerialization.jsonObject(with: buffer) as? [String: Any] {
             for key in ["percent", "stage", "error"] { data[key] = step[key] }

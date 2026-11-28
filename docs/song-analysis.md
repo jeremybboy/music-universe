@@ -10,6 +10,18 @@ The description ranks an expandable inventory within each category by average co
 
 The web app can preview a browser-decodable recording from a local file and import an existing report. The public static build has no analysis service.
 
+## Split the drum stem on Mac
+
+After song analysis, select **Split Drums** to run MDX23C DrumSep on the existing Demucs drums. Playback can continue during the split. Once ready, toggle **Kick**, **Snare**, **Hi-hat**, **Cymbals** (ride and crash), and **Percussion remainder** on the same playhead as the other stems. Turning off one drum part while **Drums** is active keeps the other parts selected. The remainder retains toms and unassigned audio, such as percussion tails or bleed, so all five sum back to the Demucs drum stem.
+
+For local evaluation, obtain the six-stem DrumSep checkpoint and YAML from the [upstream weights mirror](https://github.com/openmirlab/mdxnet-infer/releases/tag/weights-drumsep-v1) and place them in one directory. The original authors did not document license terms for these weights. Set up the model once from the Music Universe checkout, using the same Audio Analyst workspace selected in the app:
+
+```sh
+sh scripts/setup-mdx.sh "/path/to/audio-analyst-workspace" "/path/to/drumsep-weights-directory"
+```
+
+The setup uses the existing Python runtime and stores the pinned [MDX23C runner](https://github.com/openmirlab/mdxnet-infer) and verified 417 MiB checkpoint under `work/audio-analyst/mdx-local`. Drum splitting runs locally on CPU in overlapping windows and can take several minutes for a full song. The app bundles the adapter. Model files stay in the Audio Analyst workspace.
+
 ## Import a completed report
 
 Use **Song Analysis → Import analysis report** to open an Audio Analyst schema v1 JSON file up to 2 MiB. Review the excerpt and confirm the song or expression explicitly. The app keeps one report per association for the loaded song instance, in session memory. An invalid import keeps the previous report and playback. Reloading the app clears the session.

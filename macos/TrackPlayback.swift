@@ -3,7 +3,9 @@ import AVFoundation
 @MainActor
 final class TrackPlayback {
     static let stemNames = ["drums", "bass", "other", "vocals"]
-    private let names = ["mix"] + TrackPlayback.stemNames
+    static let drumParts = ["kick", "snare", "hihat", "cymbals", "percussion"]
+    static let selectableNames = stemNames + drumParts
+    private let names = ["mix"] + TrackPlayback.selectableNames
     private let engine: AVAudioEngine
     private var players: [String: AVAudioPlayerNode] = [:]
     private var files: [String: AVAudioFile] = [:]
@@ -26,6 +28,7 @@ final class TrackPlayback {
     }
 
     var available: [String] { names.filter { files[$0] != nil } }
+    var hasDrumParts: Bool { Self.drumParts.allSatisfy { files[$0] != nil } }
     var duration: Double {
         guard let original = files["mix"] else { return 0 }
         return Double(original.length) / original.processingFormat.sampleRate
@@ -34,10 +37,14 @@ final class TrackPlayback {
     var isPlaying: Bool { startTime != nil && position < duration }
 
     func publish(from directory: URL) {
+        let host = nextStartTime()
         for name in names where files[name] == nil {
-            let url = directory.appendingPathComponent(name + ".wav")
-            guard FileManager.default.fileExists(atPath: url.path) else { continue }
-            files[name] = try? AVAudioFile(forReading: url)
+            let folder = Self.drumParts.contains(name) ? directory.appendingPathComponent("drum-parts") : directory
+            let url = folder.appendingPathComponent(name + ".wav")
+            guard FileManager.default.fileExists(atPath: url.path),
+                  let audio = try? AVAudioFile(forReading: url) else { continue }
+            files[name] = audio
+            if isPlaying { schedule(name, at: position(at: host), host: host) }
         }
     }
 
@@ -57,15 +64,15 @@ final class TrackPlayback {
     }
 
     func toggleStem(_ name: String) {
-        guard Self.stemNames.contains(name), files[name] != nil else { return }
-        if selected.contains(name) {
-            selected.remove(name)
-        } else {
+        guard Self.selectableNames.contains(name), files[name] != nil else { return }
+        if Self.drumParts.contains(name) {
+            guard hasDrumParts else { return }
+            if selected.remove("drums") != nil { selected.formUnion(Self.drumParts) }
+        }
+        if name == "drums" && !selected.isDisjoint(with: Self.drumParts) {
+            selected.subtract(Self.drumParts)
+        } else if selected.remove(name) == nil {
             selected.insert(name)
-            if isPlaying && !scheduled.contains(name) {
-                let host = nextStartTime()
-                schedule(name, at: position(at: host), host: host)
-            }
         }
         selectStems()
     }

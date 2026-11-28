@@ -1,9 +1,11 @@
-export type Stem = 'drums' | 'bass' | 'other' | 'vocals';
+export type DrumPart = 'kick' | 'snare' | 'hihat' | 'cymbals' | 'percussion';
+export type Stem = 'drums' | 'bass' | 'other' | 'vocals' | DrumPart;
 export type Channel = 'mix' | Stem;
 export type TrackStatus = {
   connected: boolean; source?: string; id?: string; running: boolean; percent: number; stage: string;
   available: Channel[]; usesOriginal: boolean; selected: Stem[]; playing: boolean; position: number; duration: number;
   reportReady?: boolean; error?: string;
+  drumSplit?: { installed: boolean; running: boolean; ready: boolean; percent: number; stage: string; error?: string };
 };
 
 type NativeHandler = { postMessage: (request: Record<string, unknown>) => Promise<unknown> };
