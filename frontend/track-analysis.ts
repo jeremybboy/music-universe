@@ -1,4 +1,4 @@
-export type DrumPart = 'kick' | 'snare' | 'hihat' | 'percussion';
+export type DrumPart = 'kick' | 'snare' | 'hihat' | 'cymbals' | 'percussion';
 export type Stem = 'drums' | 'bass' | 'other' | 'vocals' | DrumPart;
 export type Channel = 'mix' | Stem;
 export type TrackStatus = {

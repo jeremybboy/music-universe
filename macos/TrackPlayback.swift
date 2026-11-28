@@ -3,7 +3,7 @@ import AVFoundation
 @MainActor
 final class TrackPlayback {
     static let stemNames = ["drums", "bass", "other", "vocals"]
-    static let drumParts = ["kick", "snare", "hihat", "percussion"]
+    static let drumParts = ["kick", "snare", "hihat", "cymbals", "percussion"]
     static let selectableNames = stemNames + drumParts
     private let names = ["mix"] + TrackPlayback.selectableNames
     private let engine: AVAudioEngine

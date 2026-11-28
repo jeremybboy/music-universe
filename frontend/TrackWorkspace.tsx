@@ -8,7 +8,8 @@ const stems = [
 ] as const;
 
 const drumParts = [
-  ['kick', 'Kick'], ['snare', 'Snare'], ['hihat', 'Hi-hat'], ['percussion', 'Percussion remainder'],
+  ['kick', 'Kick'], ['snare', 'Snare'], ['hihat', 'Hi-hat'], ['cymbals', 'Cymbals'],
+  ['percussion', 'Percussion remainder'],
 ] as const;
 
 function clock(time: number) {
@@ -152,7 +153,7 @@ function LocalTrack({ claimAudio }: { claimAudio: () => boolean }) {
             onClick={() => void act(split.running ? 'cancelDrumSplit' : 'splitDrums')}>
             {split.running ? 'Cancel drum split' : 'Split Drums'}
           </button>
-          {!split.installed && <p>Set up the optional Inverse Drum Machine runtime in the Audio Analyst workspace.</p>}
+          {!split.installed && <p>Set up the optional MDX23C runtime in the Audio Analyst workspace.</p>}
         </>}
         {split.running && <div className="track-progress">
           <div className="track-stage" aria-live="polite">{split.stage} · {split.percent}%</div>

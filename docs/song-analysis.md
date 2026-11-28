@@ -12,15 +12,15 @@ The web app can preview a browser-decodable recording from a local file and impo
 
 ## Split the drum stem on Mac
 
-After song analysis, select **Split Drums** to run Inverse Drum Machine on the existing Demucs drums. Playback can continue during the split. Once ready, toggle **Kick**, **Snare**, **Hi-hat**, and **Percussion remainder** on the same playhead as the other stems. Turning off one drum part while **Drums** is active keeps the other parts selected. The remainder retains the audio outside the three estimated classes, including uncategorized percussion, tails, or bleed, so all four sum back to the Demucs drum stem.
+After song analysis, select **Split Drums** to run MDX23C DrumSep on the existing Demucs drums. Playback can continue during the split. Once ready, toggle **Kick**, **Snare**, **Hi-hat**, **Cymbals** (ride and crash), and **Percussion remainder** on the same playhead as the other stems. Turning off one drum part while **Drums** is active keeps the other parts selected. The remainder retains toms and unassigned audio, such as percussion tails or bleed, so all five sum back to the Demucs drum stem.
 
-Set up the optional model once from the Music Universe checkout, using the same Audio Analyst workspace selected in the app:
+For local evaluation, obtain the six-stem DrumSep checkpoint and YAML from the [upstream weights mirror](https://github.com/openmirlab/mdxnet-infer/releases/tag/weights-drumsep-v1) and place them in one directory. The original authors did not document license terms for these weights. Set up the model once from the Music Universe checkout, using the same Audio Analyst workspace selected in the app:
 
 ```sh
-sh scripts/setup-idm.sh "/path/to/audio-analyst-workspace"
+sh scripts/setup-mdx.sh "/path/to/audio-analyst-workspace" "/path/to/drumsep-weights-directory"
 ```
 
-The setup uses the existing Python runtime and keeps the pinned, public [Inverse Drum Machine](https://github.com/bernardo-torres/inverse-drum-machine) checkout and checkpoint in a separate folder. Drum splitting then runs locally on CPU in overlapping windows. The app bundles its adapter. The local runtime supplies the model and weights.
+The setup uses the existing Python runtime and stores the pinned [MDX23C runner](https://github.com/openmirlab/mdxnet-infer) and verified 417 MiB checkpoint under `work/audio-analyst/mdx-local`. Drum splitting runs locally on CPU in overlapping windows and can take several minutes for a full song. The app bundles the adapter. Model files stay in the Audio Analyst workspace.
 
 ## Import a completed report
 

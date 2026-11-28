@@ -158,17 +158,18 @@ final class TrackAnalysis {
 
     private var drumInstallation: URL? {
         guard let workspace else { return nil }
-        let local = workspace.appendingPathComponent("work/audio-analyst/idm-local")
-        let model = "source/pretrained/idm-44-train-kits/checkpoints/val-epoch=518-global_step=0.ckpt"
-        guard fileManager.isReadableFile(atPath: local.appendingPathComponent(model).path),
-              fileManager.isReadableFile(atPath: local.appendingPathComponent("deps/hydra/__init__.py").path)
+        let local = workspace.appendingPathComponent("work/audio-analyst/mdx-local")
+        let model = "models/aufr33-jarredou_DrumSep_model_mdx23c_ep_141_sdr_10.8059"
+        guard fileManager.isReadableFile(atPath: local.appendingPathComponent(model + ".ckpt").path),
+              fileManager.isReadableFile(atPath: local.appendingPathComponent(model + ".yaml").path),
+              fileManager.isReadableFile(atPath: local.appendingPathComponent("source/src/mdxnet_infer/inference.py").path)
         else { return nil }
         return local
     }
 
     private func splitDrums() throws {
         guard !isBusy, let output else { throw fail("Wait for song analysis to finish.") }
-        guard let local = drumInstallation else { throw fail("Run the Inverse Drum Machine setup script first.") }
+        guard let local = drumInstallation else { throw fail("Run the MDX23C setup script first.") }
         guard playback.available.contains("drums") else { throw fail("An estimated drum stem is required.") }
         guard !fileManager.fileExists(atPath: output.appendingPathComponent("drum-parts").path) else { return }
         guard let helper = Bundle.main.url(forResource: "split_drums", withExtension: "py") else {
@@ -182,7 +183,7 @@ final class TrackAnalysis {
         process.executableURL = runtime.appendingPathComponent("runtime/bin/python")
         process.arguments = [helper.path, local.path, output.path]
         process.environment = [
-            "PYTHONPATH": local.appendingPathComponent("deps").path + ":" + runtime.appendingPathComponent("deps").path,
+            "PYTHONPATH": runtime.appendingPathComponent("deps").path,
             "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "HF_HUB_DISABLE_TELEMETRY": "1",
             "PYTHONDONTWRITEBYTECODE": "1", "NUMBA_CACHE_DIR": output.path,
         ]
@@ -208,7 +209,7 @@ final class TrackAnalysis {
             result["stage"] = running ? "Cancelling drum split" : "Drum split cancelled"
             result["error"] = nil
         } else if drumProcess != nil, !running, !playback.hasDrumParts, result["error"] == nil {
-            result["error"] = "Inverse Drum Machine exited before producing the drum parts."
+            result["error"] = "MDX23C exited before producing the drum parts."
         }
         return result
     }
